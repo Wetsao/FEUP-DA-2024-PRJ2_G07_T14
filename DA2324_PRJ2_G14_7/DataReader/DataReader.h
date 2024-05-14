@@ -23,6 +23,11 @@ public:
     void getEdgesFile(const string &filename);
 
     const unordered_map<string, Edges *> &getEdges() const;
+
+    void cenario41();
+    void cenario42();
+    void cenario43();
+    void cenario44();
 };
 
 

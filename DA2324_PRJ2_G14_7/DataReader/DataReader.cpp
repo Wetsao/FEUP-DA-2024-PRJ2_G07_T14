@@ -27,7 +27,9 @@ void DataReader::getEdgesFile(const string &filename) {
             double dist = stod(distancia);
 
             auto* edges = new Edges(origem, destino, dist);
-            this->edges.insert({origem,edges});
+            this->edges.insert({to_string(i),edges});
+            auto* edges2 = new Edges(destino, origem, dist);
+            this->edges.insert({to_string(++i), edges2});
             g.addVertex(origem);
             g.addVertex(destino);
             g.addBidirectionalEdge(origem, destino, dist);
@@ -43,4 +45,19 @@ void DataReader::getEdgesFile(const string &filename) {
 
 const unordered_map<string, Edges *> &DataReader::getEdges() const {
     return edges;
+}
+
+void DataReader::cenario41() {
+    Backtracking(&g, &getEdges());
+}
+
+void DataReader::cenario42() {
+    TriangleApproximation(&g, &getEdges());
+}
+
+void DataReader::cenario43() {
+    OtherHeuristic(&g, &getEdges());
+}
+
+void DataReader::cenario44() {
 }
