@@ -1,8 +1,8 @@
 // Original code by Gonçalo Leão
 // Updated by DA 2023/2024 Team
 
-#ifndef FEUP_DA_2024_PRJ2_G07_T14_MENU_H
-#define FEUP_DA_2024_PRJ2_G07_T14_MENU_H
+#ifndef FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H
+#define FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H
 
 #include <iostream>
 #include <vector>
@@ -124,7 +124,7 @@ public:
     bool addVertex(const T &in);
     bool removeVertex(const T &in);
 
-    void MaxFlow(Graph<string> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds);
+    //void MaxFlow(Graph<string> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds);
 
     /*
      * Adds an edge to a graph (this), given the contents of the source and
@@ -889,390 +889,390 @@ void edmondsKarp(Graph<T> *g, string source, string sink) {
     }
 }
 
-/**
- * @brief Function to calculate maximum flow in the network
- * @tparam T Type of vertex data
- * @param g Pointer to the graph
- * @param wr Map of reservoirs
- * @param ds Map of cities
- * @param i Parameter to choose output format
- */
-
-// Time Complexity: O(VE^2), where V is the number of vertices and E is the number of edges in the graph. This is because the function calls edmondsKarp, which has this time complexity.
-
-template<class T>
-void MaxFlow(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, int i) {
-    string source = "MasterSource";
-    string sink = "MasterSink";
-    g->addVertex(source);
-    g->addVertex(sink);
-    double maxFlow = 0;
-    double totalUndersupply= 0;
-    double undersupply= 0;
-    double demand2 = 0;
-    double flow = 0;
-
-    for (auto &pair: *wr) {
-        string rcode = pair.first;
-        Reservoirs *r = pair.second;
-        double weight = r->getMaxDelivery();
-
-        g->addEdge(source, rcode, pair.second->getMaxDelivery());
-    }
-
-    for (auto &pair: *ds) {
-        string dcode = pair.first;
-        Cities *c = pair.second;
-        double demand = c->getDemand();
-        double flow = 0;
-        g->addEdge(dcode, sink, pair.second->getDemand());
-    }
-
-    edmondsKarp(g, source, sink);
-
-    ofstream outputFile("output.txt");
-
-    if (outputFile.is_open()) { // check if the file was opened successfully
-        if(i == 1) {
-            outputFile << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "Value"
-                       << endl;
-            cout << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "Value" << endl;
-        }else if(i==2) {
-            cout << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "Demand" << setw(20) << left << "Value" << setw(20) << left << "Undersupply" << endl;
-        }
-        for (auto &pair: g->getVertexSet()) {
-            Vertex<T> *vertexDS = pair.second;
-            double flowTotal = 0;
-
-            for (auto e: vertexDS->getIncoming()) {
-                flowTotal += e->getFlow();
-            }
-
-        }
-        for (auto &pair: *ds) {
-            string code = pair.first;
-            Cities *cities = pair.second;
-
-            string name = cities->getCity();
-            double demand2 = cities->getDemand();
-            double flow = g->findVertex(code)->getFlow();
-            undersupply = demand2 - flow;
-            totalUndersupply += undersupply;
-            maxFlow += flow;
-            if(i==2) {
-                cout << setw(20) << left << name << setw(20) << left << code << setw(20) << left << demand2 << setw(20) << left << flow << setw(20) << left << undersupply << endl;
-
-            }else if(i==1){
-                outputFile << setw(20) << left << name << setw(20) << left << code << setw(20) << left << flow << endl;
-                cout << setw(20) << left << name << setw(20) << left << code << setw(20) << left << flow<< endl;
-            }
-        }
-
-        cout << endl << "Max Flow:" << maxFlow << endl;
-        if(i== 2) {
-            cout << "Total Undersupply:" << totalUndersupply << endl;
-        }
-        cout << "Data was written to output.txt\n";
-        outputFile.close();// close the file when done
-    } else {
-        std::cerr << "Error opening file\n";
-    }
-}
-
-/**
- * @brief Function to simulate the impact of reservoir failure on the network
- * @tparam T Type of vertex data
- * @param g Pointer to the graph before failure
- * @param g2 Pointer to the graph after failure
- * @param wr Map of reservoirs
- * @param pipes Map of pipes
- * @param ds Map of cities
- * @param code Code of the reservoir to simulate failure
- */
-
-// Time Complexity: O(V + E), where V is the number of vertices and E is the number of edges in the graph. This is because the function calls edmondsKarp twice, which has this time complexity.
-
-template<class T>
-void reservoirFailure(Graph<T> *g, Graph<T> *g2, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Pipes *> *pipes, const unordered_map<string, Cities *> *ds, const string& code) {
-    string source = "MasterSource";
-    string sink = "MasterSink";
-
-    g->addVertex(source);
-    g->addVertex(sink);
-//    g2->addVertex(source);
-//    g2->addVertex(sink);
-
-    for (const auto &pair : *wr) {
-        string rcode = pair.first;
-        Reservoirs *r = pair.second;
-        double weight = r->getMaxDelivery();
-        g->addEdge(source, rcode, pair.second->getMaxDelivery());
-        //g2->addEdge(source, rcode, pair.second->getMaxDelivery());
-    }
-    for (const auto &pair : *ds) {
-        string dcode = pair.first;
-        Cities *c = pair.second;
-        double demand = c->getDemand();
-        double flow = 0;
-        g->addEdge(dcode, sink, pair.second->getDemand());
-        //g2->addEdge(dcode, sink, pair.second->getDemand());
-    }
-    /*for (auto &pair: *pipes) {
-        string code2 = pair.first;
-        Pipes *pipe = pair.second;
-        if (pipe->getServicePointA() == code) {
-            cout << "Removing Pipeline " << code << " from " << pipe->getServicePointA() << " to " << pipe->getServicePointB() << endl;
-            g2->removeEdge(pipe->getServicePointA(), pipe->getServicePointB());
-        }
-    }*/
-    //g2->removeVertex(code);
-    edmondsKarp(g, source, sink);
-    //edmondsKarp(g2, source, sink);
-
-    // Store the initial flow for each city
-    unordered_map<string, double> initialFlow;
-    for (auto &pair: *ds) {
-        string code = pair.first;
-        Cities *cities = pair.second;
-        double flow = g->findVertex(code)->getFlow();
-        initialFlow[code] = flow;
-    }
-
-    g->removeVertex(code);
-
-//    Pipes *pump = pipes->at(code);
-//    //cout << "Removing Pumping Station " << pumpToRemove << " from " << pump->getServicePointA() << " to " << pump->getServicePointB() << endl;
-//    g->removeEdge(pump->getServicePointA(), pump->getServicePointB());
-
-    edmondsKarp(g, source, sink);
-//    int i = 0;
-//    for (const auto &pair : *ds) {
-//        string code3 = pair.first;
-//        Cities *cities = pair.second;
-//        string name = cities->getCity();
-//        double flow1 = g->findVertex(code3)->getFlow();
-//        double flow2 = g2->findVertex(code3)->getFlow();
+///**
+// * @brief Function to calculate maximum flow in the network
+// * @tparam T Type of vertex data
+// * @param g Pointer to the graph
+// * @param wr Map of reservoirs
+// * @param ds Map of cities
+// * @param i Parameter to choose output format
+// */
 //
-//        if (flow1 != flow2) {
-//            if (i == 0) {
-//                cout << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "OldFlow" << setw(20) << left << "NewFlow" << endl;
+//// Time Complexity: O(VE^2), where V is the number of vertices and E is the number of edges in the graph. This is because the function calls edmondsKarp, which has this time complexity.
+//
+//template<class T>
+//void MaxFlow(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, int i) {
+//    string source = "MasterSource";
+//    string sink = "MasterSink";
+//    g->addVertex(source);
+//    g->addVertex(sink);
+//    double maxFlow = 0;
+//    double totalUndersupply= 0;
+//    double undersupply= 0;
+//    double demand2 = 0;
+//    double flow = 0;
+//
+//    for (auto &pair: *wr) {
+//        string rcode = pair.first;
+//        Reservoirs *r = pair.second;
+//        double weight = r->getMaxDelivery();
+//
+//        g->addEdge(source, rcode, pair.second->getMaxDelivery());
+//    }
+//
+//    for (auto &pair: *ds) {
+//        string dcode = pair.first;
+//        Cities *c = pair.second;
+//        double demand = c->getDemand();
+//        double flow = 0;
+//        g->addEdge(dcode, sink, pair.second->getDemand());
+//    }
+//
+//    edmondsKarp(g, source, sink);
+//
+//    ofstream outputFile("output.txt");
+//
+//    if (outputFile.is_open()) { // check if the file was opened successfully
+//        if(i == 1) {
+//            outputFile << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "Value"
+//                       << endl;
+//            cout << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "Value" << endl;
+//        }else if(i==2) {
+//            cout << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "Demand" << setw(20) << left << "Value" << setw(20) << left << "Undersupply" << endl;
+//        }
+//        for (auto &pair: g->getVertexSet()) {
+//            Vertex<T> *vertexDS = pair.second;
+//            double flowTotal = 0;
+//
+//            for (auto e: vertexDS->getIncoming()) {
+//                flowTotal += e->getFlow();
 //            }
-//            i++;
-//            cout << setw(20) << left << name << setw(20) << left << code3 << setw(20) << left << flow1 << setw(20) << left << flow2 << endl;
+//
+//        }
+//        for (auto &pair: *ds) {
+//            string code = pair.first;
+//            Cities *cities = pair.second;
+//
+//            string name = cities->getCity();
+//            double demand2 = cities->getDemand();
+//            double flow = g->findVertex(code)->getFlow();
+//            undersupply = demand2 - flow;
+//            totalUndersupply += undersupply;
+//            maxFlow += flow;
+//            if(i==2) {
+//                cout << setw(20) << left << name << setw(20) << left << code << setw(20) << left << demand2 << setw(20) << left << flow << setw(20) << left << undersupply << endl;
+//
+//            }else if(i==1){
+//                outputFile << setw(20) << left << name << setw(20) << left << code << setw(20) << left << flow << endl;
+//                cout << setw(20) << left << name << setw(20) << left << code << setw(20) << left << flow<< endl;
+//            }
+//        }
+//
+//        cout << endl << "Max Flow:" << maxFlow << endl;
+//        if(i== 2) {
+//            cout << "Total Undersupply:" << totalUndersupply << endl;
+//        }
+//        cout << "Data was written to output.txt\n";
+//        outputFile.close();// close the file when done
+//    } else {
+//        std::cerr << "Error opening file\n";
+//    }
+//}
+//
+///**
+// * @brief Function to simulate the impact of reservoir failure on the network
+// * @tparam T Type of vertex data
+// * @param g Pointer to the graph before failure
+// * @param g2 Pointer to the graph after failure
+// * @param wr Map of reservoirs
+// * @param pipes Map of pipes
+// * @param ds Map of cities
+// * @param code Code of the reservoir to simulate failure
+// */
+//
+//// Time Complexity: O(V + E), where V is the number of vertices and E is the number of edges in the graph. This is because the function calls edmondsKarp twice, which has this time complexity.
+//
+//template<class T>
+//void reservoirFailure(Graph<T> *g, Graph<T> *g2, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Pipes *> *pipes, const unordered_map<string, Cities *> *ds, const string& code) {
+//    string source = "MasterSource";
+//    string sink = "MasterSink";
+//
+//    g->addVertex(source);
+//    g->addVertex(sink);
+////    g2->addVertex(source);
+////    g2->addVertex(sink);
+//
+//    for (const auto &pair : *wr) {
+//        string rcode = pair.first;
+//        Reservoirs *r = pair.second;
+//        double weight = r->getMaxDelivery();
+//        g->addEdge(source, rcode, pair.second->getMaxDelivery());
+//        //g2->addEdge(source, rcode, pair.second->getMaxDelivery());
+//    }
+//    for (const auto &pair : *ds) {
+//        string dcode = pair.first;
+//        Cities *c = pair.second;
+//        double demand = c->getDemand();
+//        double flow = 0;
+//        g->addEdge(dcode, sink, pair.second->getDemand());
+//        //g2->addEdge(dcode, sink, pair.second->getDemand());
+//    }
+//    /*for (auto &pair: *pipes) {
+//        string code2 = pair.first;
+//        Pipes *pipe = pair.second;
+//        if (pipe->getServicePointA() == code) {
+//            cout << "Removing Pipeline " << code << " from " << pipe->getServicePointA() << " to " << pipe->getServicePointB() << endl;
+//            g2->removeEdge(pipe->getServicePointA(), pipe->getServicePointB());
+//        }
+//    }*/
+//    //g2->removeVertex(code);
+//    edmondsKarp(g, source, sink);
+//    //edmondsKarp(g2, source, sink);
+//
+//    // Store the initial flow for each city
+//    unordered_map<string, double> initialFlow;
+//    for (auto &pair: *ds) {
+//        string code = pair.first;
+//        Cities *cities = pair.second;
+//        double flow = g->findVertex(code)->getFlow();
+//        initialFlow[code] = flow;
+//    }
+//
+//    g->removeVertex(code);
+//
+////    Pipes *pump = pipes->at(code);
+////    //cout << "Removing Pumping Station " << pumpToRemove << " from " << pump->getServicePointA() << " to " << pump->getServicePointB() << endl;
+////    g->removeEdge(pump->getServicePointA(), pump->getServicePointB());
+//
+//    edmondsKarp(g, source, sink);
+////    int i = 0;
+////    for (const auto &pair : *ds) {
+////        string code3 = pair.first;
+////        Cities *cities = pair.second;
+////        string name = cities->getCity();
+////        double flow1 = g->findVertex(code3)->getFlow();
+////        double flow2 = g2->findVertex(code3)->getFlow();
+////
+////        if (flow1 != flow2) {
+////            if (i == 0) {
+////                cout << setw(20) << left << "City" << setw(20) << left << "Code" << setw(20) << left << "OldFlow" << setw(20) << left << "NewFlow" << endl;
+////            }
+////            i++;
+////            cout << setw(20) << left << name << setw(20) << left << code3 << setw(20) << left << flow1 << setw(20) << left << flow2 << endl;
+////        }
+////    }
+////
+////    if (i == 0) {
+////        cout << "No impact on the flow of the cities";
+////    }
+//
+//
+//    // Output the impact of the Reservoir failure
+//    bool anyCityAffected = false;
+//    for (auto &pair: *ds) {
+//
+//        string code = pair.first;
+//        Cities *cities = pair.second;
+//        double newFlow = g->findVertex(code)->getFlow();
+//        double oldFlow = initialFlow[code];
+//
+//        if (newFlow != oldFlow) {
+//            anyCityAffected = true;
+//            cout << "City " << code << " is affected:" << endl;
+//            cout << "Old Flow: " << oldFlow << endl;
+//            cout << "New Flow: " << newFlow << endl;
 //        }
 //    }
 //
-//    if (i == 0) {
-//        cout << "No impact on the flow of the cities";
+//    if (!anyCityAffected) {
+//        cout << "No city is affected." << endl;
 //    }
-
-
-    // Output the impact of the Reservoir failure
-    bool anyCityAffected = false;
-    for (auto &pair: *ds) {
-
-        string code = pair.first;
-        Cities *cities = pair.second;
-        double newFlow = g->findVertex(code)->getFlow();
-        double oldFlow = initialFlow[code];
-
-        if (newFlow != oldFlow) {
-            anyCityAffected = true;
-            cout << "City " << code << " is affected:" << endl;
-            cout << "Old Flow: " << oldFlow << endl;
-            cout << "New Flow: " << newFlow << endl;
-        }
-    }
-
-    if (!anyCityAffected) {
-        cout << "No city is affected." << endl;
-    }
-}
-
-/**
- * @brief Function to simulate the impact of pumping station failure on the network
- * @tparam T Type of vertex data
- * @param g Pointer to the graph
- * @param wr Map of reservoirs
- * @param ds Map of cities
- * @param pipes Map of pipes
- * @param pumpToRemove Code of the pumping station to remove
- */
-
-// Time Complexity: O(V + E), where V is the number of vertices and E is the number of edges in the graph. This is because the function calls edmondsKarp twice, which has this time complexity.
-
-template<class T>
-void pumpingStationFailureImpact(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, const unordered_map<string, Pipes *> *pipes, const string& pumpToRemove) {
-    string source = "MasterSource";
-    string sink = "MasterSink";
-    g->addVertex(source);
-    g->addVertex(sink);
-    double totalUndersupply = 0;
-    double undersupply = 0;
-
-    // Add all reservoirs and their outgoing edges to the graph
-    for (auto &pair: *wr) {
-        string rcode = pair.first;
-        Reservoirs *r = pair.second;
-        double weight = r->getMaxDelivery();
-        g->addEdge(source, rcode, pair.second->getMaxDelivery());
-    }
-
-    // Add all cities and their incoming edges to the graph
-    for (auto &pair: *ds) {
-        string dcode = pair.first;
-        Cities *c = pair.second;
-        double demand = c->getDemand();
-        g->addEdge(dcode, sink, pair.second->getDemand());
-    }
-
-    // Perform max flow calculation
-    edmondsKarp(g, source, sink);
-
-    // Store the initial flow for each city
-    unordered_map<string, double> initialFlow;
-    for (auto &pair: *ds) {
-        string code = pair.first;
-        Cities *cities = pair.second;
-        double flow = g->findVertex(code)->getFlow();
-        initialFlow[code] = flow;
-    }
-
-    // Check if the selected pump exists
-    if (pipes->find(pumpToRemove) == pipes->end()) {
-        cout << "Error: Pumping Station " << pumpToRemove << " not found." << endl;
-        return;
-    }
-
-    // Remove the selected pump and recalculate the max flow
-    Pipes *pump = pipes->at(pumpToRemove);
-    //cout << "Removing Pumping Station " << pumpToRemove << " from " << pump->getServicePointA() << " to " << pump->getServicePointB() << endl;
-    g->removeEdge(pump->getServicePointA(), pump->getServicePointB());
-
-    edmondsKarp(g, source, sink);
-
-    // Output the impact of the pumping station failure
-    bool anyCityAffected = false;
-    for (auto &pair: *ds) {
-        string code = pair.first;
-        Cities *cities = pair.second;
-        double newFlow = g->findVertex(code)->getFlow();
-        double oldFlow = initialFlow[code];
-
-        if (newFlow != oldFlow) {
-            anyCityAffected = true;
-            cout << "City " << code << " is affected:" << endl;
-            cout << "Old Flow: " << oldFlow << endl;
-            cout << "New Flow: " << newFlow << endl;
-        }
-    }
-
-    if (!anyCityAffected) {
-        cout << "No city is affected." << endl;
-    }
-}
-
-/**
- * @brief Function to simulate the impact of pipeline failure on the network
- * @tparam T Type of vertex data
- * @param g Pointer to the graph
- * @param wr Map of reservoirs
- * @param ds Map of cities
- * @param pipes Map of pipes
- * @param pipeToRemove Vector of pipeline codes to remove
- */
-
-// Time Complexity: O(P * (V + E)), where P is the number of pipelines to be removed, V is the number of vertices, and E is the number of edges in the graph.
-// This is because the function iterates over each pipeline to be removed and calls edmondsKarp once for each removal, which has a time complexity of O(V + E).
-
-template<class T>
-void pipelineFailureImpact(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, const unordered_map<string, Pipes *> *pipes, const vector<string>& pipeToRemove) {
-    string source = "MasterSource";
-    string sink = "MasterSink";
-    g->addVertex(source);
-    g->addVertex(sink);
-    double totalUndersupply = 0;
-    double undersupply = 0;
-
-    // Add all reservoirs and their outgoing edges to the graph
-    for (auto &pair: *wr) {
-        string rcode = pair.first;
-        Reservoirs *r = pair.second;
-        double weight = r->getMaxDelivery();
-        g->addEdge(source, rcode, pair.second->getMaxDelivery());
-    }
-
-    // Add all cities and their incoming edges to the graph
-    for (auto &pair: *ds) {
-        string dcode = pair.first;
-        Cities *c = pair.second;
-        double demand = c->getDemand();
-        g->addEdge(dcode, sink, pair.second->getDemand());
-    }
-
-    // Perform max flow calculation
-    edmondsKarp(g, source, sink);
-
-    // Store the initial flow for each city
-    unordered_map<string, double> initialFlow;
-    for (auto &pair: *ds) {
-        string code = pair.first;
-        Cities *cities = pair.second;
-        double flow = g->findVertex(code)->getFlow();
-        initialFlow[code] = flow;
-    }
-
-    // Loop through each pipeline to be removed
-    for (const string& codePipe : pipeToRemove) {
-        // Check if the selected pipe exists
-        if (pipes->find(codePipe) == pipes->end()) {
-            cout << "Error: Pipeline " << codePipe << " not found." << endl;
-            continue; // Move to the next pipeline if this one doesn't exist
-        }
-
-        // Remove the selected pipeline and recalculate the max flow
-        bool pipeRemoved = false;
-        for (auto &pair: *pipes) {
-            string code = pair.first;
-            Pipes *pipe = pair.second;
-            if (code == codePipe) {
-                cout << "Removing Pipeline " << codePipe << " from " << pipe->getServicePointA() << " to " << pipe->getServicePointB() << endl;
-                g->removeEdge(pipe->getServicePointA(), pipe->getServicePointB());
-                //g->removeEdge(pipe->getServicePointB(), pipe->getServicePointA());
-                pipeRemoved = true;
-                break; // Exit the loop after removing the pipeline
-            }
-        }
-
-        if (!pipeRemoved) {
-            // This shouldn't happen if the pipeline exists, but it's good to check
-            cout << "Error: Failed to remove pipeline " << codePipe << endl;
-        }
-    }
-
-    edmondsKarp(g, source, sink);
-
-    // Output the impact of the pipeline failure
-    bool anyCityAffected = false;
-    for (auto &pair: *ds) {
-
-        string code = pair.first;
-        Cities *cities = pair.second;
-        double newFlow = g->findVertex(code)->getFlow();
-        double oldFlow = initialFlow[code];
-
-        if (newFlow != oldFlow) {
-            anyCityAffected = true;
-            cout << "City " << code << " is affected:" << endl;
-            cout << "Old Flow: " << oldFlow << endl;
-            cout << "New Flow: " << newFlow << endl;
-        }
-    }
-
-    if (!anyCityAffected) {
-        cout << "No city is affected." << endl;
-    }
-}
+//}
+//
+///**
+// * @brief Function to simulate the impact of pumping station failure on the network
+// * @tparam T Type of vertex data
+// * @param g Pointer to the graph
+// * @param wr Map of reservoirs
+// * @param ds Map of cities
+// * @param pipes Map of pipes
+// * @param pumpToRemove Code of the pumping station to remove
+// */
+//
+//// Time Complexity: O(V + E), where V is the number of vertices and E is the number of edges in the graph. This is because the function calls edmondsKarp twice, which has this time complexity.
+//
+//template<class T>
+//void pumpingStationFailureImpact(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, const unordered_map<string, Pipes *> *pipes, const string& pumpToRemove) {
+//    string source = "MasterSource";
+//    string sink = "MasterSink";
+//    g->addVertex(source);
+//    g->addVertex(sink);
+//    double totalUndersupply = 0;
+//    double undersupply = 0;
+//
+//    // Add all reservoirs and their outgoing edges to the graph
+//    for (auto &pair: *wr) {
+//        string rcode = pair.first;
+//        Reservoirs *r = pair.second;
+//        double weight = r->getMaxDelivery();
+//        g->addEdge(source, rcode, pair.second->getMaxDelivery());
+//    }
+//
+//    // Add all cities and their incoming edges to the graph
+//    for (auto &pair: *ds) {
+//        string dcode = pair.first;
+//        Cities *c = pair.second;
+//        double demand = c->getDemand();
+//        g->addEdge(dcode, sink, pair.second->getDemand());
+//    }
+//
+//    // Perform max flow calculation
+//    edmondsKarp(g, source, sink);
+//
+//    // Store the initial flow for each city
+//    unordered_map<string, double> initialFlow;
+//    for (auto &pair: *ds) {
+//        string code = pair.first;
+//        Cities *cities = pair.second;
+//        double flow = g->findVertex(code)->getFlow();
+//        initialFlow[code] = flow;
+//    }
+//
+//    // Check if the selected pump exists
+//    if (pipes->find(pumpToRemove) == pipes->end()) {
+//        cout << "Error: Pumping Station " << pumpToRemove << " not found." << endl;
+//        return;
+//    }
+//
+//    // Remove the selected pump and recalculate the max flow
+//    Pipes *pump = pipes->at(pumpToRemove);
+//    //cout << "Removing Pumping Station " << pumpToRemove << " from " << pump->getServicePointA() << " to " << pump->getServicePointB() << endl;
+//    g->removeEdge(pump->getServicePointA(), pump->getServicePointB());
+//
+//    edmondsKarp(g, source, sink);
+//
+//    // Output the impact of the pumping station failure
+//    bool anyCityAffected = false;
+//    for (auto &pair: *ds) {
+//        string code = pair.first;
+//        Cities *cities = pair.second;
+//        double newFlow = g->findVertex(code)->getFlow();
+//        double oldFlow = initialFlow[code];
+//
+//        if (newFlow != oldFlow) {
+//            anyCityAffected = true;
+//            cout << "City " << code << " is affected:" << endl;
+//            cout << "Old Flow: " << oldFlow << endl;
+//            cout << "New Flow: " << newFlow << endl;
+//        }
+//    }
+//
+//    if (!anyCityAffected) {
+//        cout << "No city is affected." << endl;
+//    }
+//}
+//
+///**
+// * @brief Function to simulate the impact of pipeline failure on the network
+// * @tparam T Type of vertex data
+// * @param g Pointer to the graph
+// * @param wr Map of reservoirs
+// * @param ds Map of cities
+// * @param pipes Map of pipes
+// * @param pipeToRemove Vector of pipeline codes to remove
+// */
+//
+//// Time Complexity: O(P * (V + E)), where P is the number of pipelines to be removed, V is the number of vertices, and E is the number of edges in the graph.
+//// This is because the function iterates over each pipeline to be removed and calls edmondsKarp once for each removal, which has a time complexity of O(V + E).
+//
+//template<class T>
+//void pipelineFailureImpact(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, const unordered_map<string, Pipes *> *pipes, const vector<string>& pipeToRemove) {
+//    string source = "MasterSource";
+//    string sink = "MasterSink";
+//    g->addVertex(source);
+//    g->addVertex(sink);
+//    double totalUndersupply = 0;
+//    double undersupply = 0;
+//
+//    // Add all reservoirs and their outgoing edges to the graph
+//    for (auto &pair: *wr) {
+//        string rcode = pair.first;
+//        Reservoirs *r = pair.second;
+//        double weight = r->getMaxDelivery();
+//        g->addEdge(source, rcode, pair.second->getMaxDelivery());
+//    }
+//
+//    // Add all cities and their incoming edges to the graph
+//    for (auto &pair: *ds) {
+//        string dcode = pair.first;
+//        Cities *c = pair.second;
+//        double demand = c->getDemand();
+//        g->addEdge(dcode, sink, pair.second->getDemand());
+//    }
+//
+//    // Perform max flow calculation
+//    edmondsKarp(g, source, sink);
+//
+//    // Store the initial flow for each city
+//    unordered_map<string, double> initialFlow;
+//    for (auto &pair: *ds) {
+//        string code = pair.first;
+//        Cities *cities = pair.second;
+//        double flow = g->findVertex(code)->getFlow();
+//        initialFlow[code] = flow;
+//    }
+//
+//    // Loop through each pipeline to be removed
+//    for (const string& codePipe : pipeToRemove) {
+//        // Check if the selected pipe exists
+//        if (pipes->find(codePipe) == pipes->end()) {
+//            cout << "Error: Pipeline " << codePipe << " not found." << endl;
+//            continue; // Move to the next pipeline if this one doesn't exist
+//        }
+//
+//        // Remove the selected pipeline and recalculate the max flow
+//        bool pipeRemoved = false;
+//        for (auto &pair: *pipes) {
+//            string code = pair.first;
+//            Pipes *pipe = pair.second;
+//            if (code == codePipe) {
+//                cout << "Removing Pipeline " << codePipe << " from " << pipe->getServicePointA() << " to " << pipe->getServicePointB() << endl;
+//                g->removeEdge(pipe->getServicePointA(), pipe->getServicePointB());
+//                //g->removeEdge(pipe->getServicePointB(), pipe->getServicePointA());
+//                pipeRemoved = true;
+//                break; // Exit the loop after removing the pipeline
+//            }
+//        }
+//
+//        if (!pipeRemoved) {
+//            // This shouldn't happen if the pipeline exists, but it's good to check
+//            cout << "Error: Failed to remove pipeline " << codePipe << endl;
+//        }
+//    }
+//
+//    edmondsKarp(g, source, sink);
+//
+//    // Output the impact of the pipeline failure
+//    bool anyCityAffected = false;
+//    for (auto &pair: *ds) {
+//
+//        string code = pair.first;
+//        Cities *cities = pair.second;
+//        double newFlow = g->findVertex(code)->getFlow();
+//        double oldFlow = initialFlow[code];
+//
+//        if (newFlow != oldFlow) {
+//            anyCityAffected = true;
+//            cout << "City " << code << " is affected:" << endl;
+//            cout << "Old Flow: " << oldFlow << endl;
+//            cout << "New Flow: " << newFlow << endl;
+//        }
+//    }
+//
+//    if (!anyCityAffected) {
+//        cout << "No city is affected." << endl;
+//    }
+//}
 //template<class T>
 //void pipelineFailureImpact(Graph<T> *g, const unordered_map<string, Reservoirs *> *wr, const unordered_map<string, Cities *> *ds, const unordered_map<string, Pipes *> *pipes, const vector<string>& pipeToRemove) {
 //    string source = "MasterSource";
@@ -1531,4 +1531,4 @@ void WaterNetworkUndersupply(Graph<T> *g, const unordered_map<string, Reservoirs
 
 
 
-#endif // FEUP_DA_2024_PRJ2_G07_T14_MENU_H
+#endif // FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H

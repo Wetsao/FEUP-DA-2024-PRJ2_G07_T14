@@ -11,4 +11,5 @@ add_executable(DA2324_PRJ2_G14_7
         DataReader/DataReader.h
         menu.h
         main.cpp
-        menu.cpp)
+        menu.cpp
+        Class/Edges.cpp)

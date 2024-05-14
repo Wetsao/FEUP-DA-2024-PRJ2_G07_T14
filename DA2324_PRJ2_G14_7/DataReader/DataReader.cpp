@@ -1,44 +1,46 @@
 #include "DataReader.h"
 
-DataReader::DataReader() {};
+DataReader::DataReader() {}
 
-void DataReader::getCities(const string &filename) {
-    string origen, destino, distancia;
-
+void DataReader::getEdgesFile(const string &filename) {
+    int i= 0;
+    string origem, destino, distancia;
 
     ifstream file(filename);
 
-
-    if (!file.is_open())
+    if (!file)
     {
         cerr << "Error: file " << filename << " not found" << endl;
-        return;
     }
-
     string line;
     getline(file, line); // Ignore header line
     while (getline(file, line)) {
         stringstream ss(line);
 
-        getline(ss, City, ',');
-        getline(ss, Id, ',');
-        getline(ss, Code, ',');
-        getline(ss, Demand, ',');
-        getline(ss, Population, ',');
+        getline(ss, origem, ',');
+        getline(ss, destino, ',');
+        getline(ss, distancia, ',');
 
         try {
-            int idi = stoi(Id);
-            double dem = stod(Demand);
-            double pop = stod(Population);
+//            int idorigem = stoi(origem);
+//            int iddestino = stoi(destino);
+            double dist = stod(distancia);
 
-            auto* cities = new Cities(City, idi, Code, dem, pop);
-            this->DS.insert({Code, cities});
-            g.addVertex(Code);
+            auto* edges = new Edges(origem, destino, dist);
+            this->edges.insert({origem,edges});
+            g.addVertex(origem);
+            g.addVertex(destino);
+            g.addBidirectionalEdge(origem, destino, dist);
         } catch (const std::invalid_argument& e) {
             cerr << "Invalid argument: " << e.what() << endl;
         } catch (const std::out_of_range& e) {
             cerr << "Out of range: " << e.what() << endl;
         }
+        i++;
     }
     file.close();
+}
+
+const unordered_map<string, Edges *> &DataReader::getEdges() const {
+    return edges;
 }

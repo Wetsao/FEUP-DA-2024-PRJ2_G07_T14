@@ -8,37 +8,21 @@
 #include <limits>
 #include <sstream>
 #include "data_structures/Graph.h"
+#include "Class/Edges.h"
+
 
 using namespace std;
 
 class DataReader {
 private:
-    unordered_map<string, Reservoirs *> WR;
-    unordered_map<string, Stations *> PS;
-    unordered_map<string, Cities *> DS;
-    unordered_map<string, Pipes *> pipes;
+    unordered_map<string, Edges *> edges;
     Graph<string> g;
 public:
     DataReader();
 
+    void getEdgesFile(const string &filename);
 
-    void getCities(const string &filename);
-    void getReservoirs(const string &filename);
-    void getStations(const string &filename);
-    void getPipes(const string &filename);
-
-    const unordered_map<string, Reservoirs *> &getWR() const;
-    const unordered_map<string, Stations *> &getPS() const;
-    const unordered_map<string, Cities *> &getDS() const;
-    const unordered_map<string, Pipes *> &getPipesgetter() const;
-
-    void MaxFlowAllCities(int i);
-    void MaxFlowSpecificCity(const string &code);
-
-    void pipelinefailureImpact(const vector<string>& pipeToRemove);
-    void reservoirfailure(const string& code);
-
-    void pumpingstationfailure(const string &code);
+    const unordered_map<string, Edges *> &getEdges() const;
 };
 
 
