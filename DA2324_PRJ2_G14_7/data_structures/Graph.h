@@ -7,9 +7,11 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <limits>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include <iomanip>
 #include "data_structures/MutablePriorityQueue.h"
@@ -162,6 +164,7 @@ protected:
      */
     int findVertexIdx(const T &in) const;
 
+    void findMST();
 };
 
 void deleteMatrix(int **m, int n);
@@ -783,72 +786,7 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     }
 }
 
-/*
-#include <vector>
-#include <limits>
-#include <algorithm>
 
-using namespace std;
-
-template <class T>
-void tspBTUtil(const unsigned int **dists, vector<unsigned int>& vertex, unsigned int n, unsigned int& min_path, unsigned int current_pathweight, unsigned int visited, unsigned int count, unsigned int path[]) {
-    // If all cities have been visited, add distance from last city to starting city and update min_path
-    if (count == n) {
-        min_path = min(min_path, current_pathweight + dists[vertex[count - 1]][0]);
-        return;
-    }
-
-    // Try all unvisited cities as next destination
-    for (unsigned int i = 1; i < n; i++) {
-        if (!(visited & (1 << i))) {
-            // Mark city as visited
-            visited |= (1 << i);
-            // Update current path weight
-            unsigned int new_pathweight = current_pathweight + dists[vertex[count - 1]][vertex[i]];
-            // Recursive call for the next city
-            tspBTUtil(dists, vertex, n, min_path, new_pathweight, visited, count + 1, path);
-            // Backtrack
-            visited &= ~(1 << i);
-        }
-    }
-}
-
-template <class T>
-unsigned int tspBT(const unsigned int **dists, unsigned int n, unsigned int path[]) {
-    // Vector to store the indexes of cities
-    vector<unsigned int> vertex;
-    for(unsigned int i = 0; i < n; i++) {
-        if(i != 0) {
-            vertex.push_back(i);
-        }
-    }
-
-    // Initialize minimum distance
-    unsigned int min_path = numeric_limits<int>::max();
-
-    // Mark first city as visited
-    unsigned int visited = 1;
-
-    // Call the recursive function starting from the first city
-    tspBTUtil(dists, vertex, n, min_path, 0, visited, 1, path);
-
-    return min_path;
-}
-
-tspBTUtil is a recursive function that explores all possible paths starting from the first city and
-updates min_path whenever a complete path is found.
-
-visited is used as a bitmask to keep track of visited cities. Each bit represents whether a city
-has been visited or not.
-
-The loop in tspBTUtil iterates over all unvisited cities from the current city and recursively explores paths.
-
-Before making a recursive call, the visited city is marked and the current path weight is updated.
-After the recursive call, the visited city is unmarked to backtrack and explore other paths.
-
-The main tspBT function initializes visited to mark the first city as visited and then
-calls tspBTUtil to start the recursive backtracking process.
- */
 
 #include <algorithm> // for std::fill_n
 
@@ -860,6 +798,248 @@ void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *ed
 }
 
 
+/*
+template <class T>
+void Graph<T>::findMST() {
+    // Initialize a priority queue to store vertices with their corresponding key values
+    std::priority_queue<std::pair<double, Vertex<T>*>, std::vector<std::pair<double, Vertex<T>*>>, std::greater<std::pair<double, Vertex<T>*>>> pq;
+
+    // Initialize a set to keep track of vertices included in MST
+    std::unordered_set<Vertex<T>*> included;
+
+    // Initialize key values for all vertices to infinity
+    for (auto& pair : vertexSet) {
+        pair.second->setDist(INF);
+    }
+
+    // Start from the first vertex
+    Vertex<T>* start = vertexSet.begin()->second;
+    start->setDist(0);
+
+    // Push the first vertex into the priority queue
+    pq.push({0, start});
+
+    while (!pq.empty()) {
+        // Extract the vertex with the minimum key value
+        auto current = pq.top().second;
+        pq.pop();
+
+        // Mark the current vertex as included in MST
+        included.insert(current);
+
+        // Update key values of adjacent vertices
+        for (auto& edge : current->getAdj()) {
+            auto neighbor = edge->getDest();
+            double weight = edge->getWeight();
+            if (included.find(neighbor) == included.end() && weight < neighbor->getDist()) {
+                neighbor->setDist(weight);
+                neighbor->setPath(edge);
+                pq.push({weight, neighbor});
+            }
+        }
+    }
+
+    // Now, you can construct the MST using the information stored in the vertices
+    // For example, you can iterate over each vertex and print its parent in the MST
+    for (auto& pair : vertexSet) {
+        auto vertex = pair.second;
+        auto parentEdge = vertex->getPath();
+        if (parentEdge != nullptr) {
+            auto parentVertex = parentEdge->getOrig();
+            // Here, you can construct the MST edges using parentEdge and vertex
+        }
+    }
+}
+*/
+
+template <class T>
+class Christofides {
+public:
+    static std::vector<Vertex<T>*> findApproximateTSP(Graph<T>& graph);
+private:
+    static int getMinIndex(int key[], bool mst[], int n);
+    static void findOdds(const Graph<T>& mst, std::vector<int>& odds);
+    static void perfectMatching(Graph<T>& graph, std::vector<int>& odds);
+    static void eulerTour(const Graph<T>& graph, Vertex<T>* start, std::vector<Vertex<T>*>& tour);
+    static void makeHamiltonian(std::vector<Vertex<T>*>& tour);
+    static double calculateTourLength(const std::vector<Vertex<T>*>& tour);
+};
+
+template <class T>
+std::vector<Vertex<T>*> Christofides<T>::findApproximateTSP(Graph<T>& graph) {
+    // Step 1: Find a minimum spanning tree (MST) of the graph
+    Graph<T> mst = graph.findMinimumSpanningTree();
+
+    // Step 2: Find vertices with odd degree in the MST
+    std::vector<int> odds;
+    findOdds(mst, odds);
+
+    // Step 3: Find a perfect matching for the vertices with odd degree
+    perfectMatching(graph, odds);
+
+    // Step 4: Combine the MST and the matching to form a multigraph
+    Graph<T> combinedGraph = mst;
+    for (auto& v : graph.getVertexSet()) {
+        for (auto& edge : v.second->getAdj()) {
+            combinedGraph.addEdge(v.second->getInfo(), edge->getDest()->getInfo(), edge->getWeight());
+        }
+    }
+
+    // Step 5: Find an Eulerian tour in the multigraph
+    std::vector<Vertex<T>*> eulerTour;
+    eulerTour(combinedGraph, combinedGraph.getVertexSet().begin()->second, eulerTour);
+
+    // Step 6: Make the Eulerian tour into a Hamiltonian cycle
+    makeHamiltonian(eulerTour);
+
+    return eulerTour;
+}
+
+template <class T>
+int Christofides<T>::getMinIndex(int key[], bool mst[], int n) {
+    // initialize min and min_index
+    int min = std::numeric_limits<int>::max();
+    int min_index;
+
+    // iterate through each vertex
+    for (int i = 0; i < n; i++) {
+        // if vertex hasn't been visited and has a smaller key than min
+        if (!mst[i] && key[i] < min) {
+            // reassign min and min_index to the values from this node
+            min = key[i];
+            min_index = i;
+        }
+    }
+
+    return min_index;
+}
+
+template <class T>
+void Christofides<T>::findOdds(const Graph<T>& mst, std::vector<int>& odds) {
+    for (auto& v : mst.getVertexSet()) {
+        if (v.second->getDegree() % 2 != 0) {
+            odds.push_back(v.first);
+        }
+    }
+}
+
+template <class T>
+void Christofides<T>::perfectMatching(Graph<T>& graph, std::vector<int>& odds) {
+    int closest, length;
+    while (!odds.empty()) {
+        int first = odds.front();
+        auto it = odds.begin() + 1;
+        length = std::numeric_limits<int>::max();
+        for (; it != odds.end(); ++it) {
+            if (graph.getEdgeWeight(first, *it) < length) {
+                length = graph.getEdgeWeight(first, *it);
+                closest = *it;
+            }
+        }
+        graph.addEdge(first, closest, length);
+        graph.addEdge(closest, first, length);
+        odds.erase(std::remove(odds.begin(), odds.end(), closest), odds.end());
+        odds.erase(std::remove(odds.begin(), odds.end(), first), odds.end());
+    }
+}
+
+template <class T>
+void Christofides<T>::eulerTour(const Graph<T>& graph, Vertex<T>* start, std::vector<Vertex<T>*>& tour) {
+    std::stack<Vertex<T>*> stack;
+    Vertex<T>* pos = start;
+    tour.push_back(pos);
+    while (!stack.empty() || !pos->getAdj().empty()) {
+        if (pos->getAdj().empty()) {
+            pos = stack.top();
+            stack.pop();
+        } else {
+            stack.push(pos);
+            auto edge = pos->getAdj().front();
+            pos->removeEdge(edge);
+            pos = edge->getDest();
+            tour.push_back(pos);
+        }
+    }
+}
+
+template <class T>
+void Christofides<T>::makeHamiltonian(std::vector<Vertex<T>*>& tour) {
+    // Remove visited nodes from Euler tour
+    std::unordered_set<Vertex<T>*> visited;
+    auto cur = tour.begin();
+    auto iter = tour.begin() + 1;
+    int pathCost = 0;
+
+    visited.insert(*cur);
+
+    while (iter != tour.end()) {
+        if (visited.find(*iter) == visited.end()) {
+            pathCost += (*cur)->getEdgeWeightTo(*iter);
+            cur = iter;
+            visited.insert(*cur);
+            iter = cur + 1;
+        } else {
+            iter = tour.erase(iter);
+        }
+    }
+    // Add distance to root
+    if (iter != tour.end()) {
+        pathCost += (*cur)->getEdgeWeightTo(tour.front());
+    }
+}
+
+template <class T>
+double Christofides<T>::calculateTourLength(const std::vector<Vertex<T>*>& tour) {
+    double length = 0;
+    for (size_t i = 0; i < tour.size() - 1; ++i) {
+        length += tour[i]->getEdgeWeightTo(tour[i + 1]);
+    }
+    // Add distance to root
+    length += tour.back()->getEdgeWeightTo(tour.front());
+    return length;
+}
+
+template <class T>
+void Graph<T>::findMST() {
+    // Initialize a priority queue to store vertices with their corresponding key values
+    std::priority_queue<std::pair<double, Vertex<T>*>, std::vector<std::pair<double, Vertex<T>*>>, std::greater<std::pair<double, Vertex<T>*>>> pq;
+
+    // Initialize a set to keep track of vertices included in MST
+    std::unordered_set<Vertex<T>*> included;
+
+    // Start from any vertex (here, we choose the first vertex)
+    Vertex<T>* start = vertexSet.begin()->second;
+
+    // Push the start vertex into the priority queue with key value 0
+    pq.push({0, start});
+
+    while (!pq.empty()) {
+        // Extract the vertex with the minimum key value
+        auto current = pq.top().second;
+        pq.pop();
+
+        // If the current vertex is already included in MST, continue
+        if (included.find(current) != included.end()) {
+            continue;
+        }
+
+        // Mark the current vertex as included in MST
+        included.insert(current);
+
+        // Update key values of adjacent vertices and push them into the priority queue
+        for (auto& edge : current->getAdj()) {
+            auto neighbor = edge->getDest();
+            double weight = edge->getWeight();
+            if (included.find(neighbor) == included.end()) {
+                neighbor->setDist(weight);
+                neighbor->setPath(edge);
+                pq.push({weight, neighbor});
+            }
+        }
+    }
+
+    // At the end of the loop, the MST edges are stored in the 'path' attribute of each vertex
+}
 
 template<class T>
 void OtherHeuristic(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
