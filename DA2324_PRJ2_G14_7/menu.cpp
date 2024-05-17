@@ -5,12 +5,13 @@ void Menu::getDisplay(){
     // State = 1 Means Start
     // State = 2 Means Data Loaded
     // State = 3 Means Finished Program
+    Graph<string> Teste;
     DataReader reader;
     string datasetPath;
     while(!(state ==3)) {
             switch(state){
                 case 1:
-                    cout << "You Can Select The Dataset By Typing The Path To File Of The Dataset (EX: C:\\Users\\User\\Desktop\\e\\2324\\2ano\\2sem\\DA\\FEUP-DA-2024-PRJ2_G07_T14\\DA2324_PRJ2_G14_7\\DataSet\\Toy-Graphs\\shipping.csv)" << endl;
+                    cout << "You Can Select The Dataset By Typing The Path To File Of The Dataset (EX: DA2324_PRJ2_G14_7/DataSet/Toy-Graphs/shipping.csv)" << endl;
                     cout << "Select Dataset:";
                     cin >> datasetPath;
                     reader.getEdgesFile(datasetPath);

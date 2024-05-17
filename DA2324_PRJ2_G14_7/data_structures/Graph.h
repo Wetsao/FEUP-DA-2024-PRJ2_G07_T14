@@ -148,7 +148,8 @@ public:
     bool dfsIsDAG(Vertex<T> *v) const;
     std::vector<T> topsort() const;
 
-//    void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges);
+//    void Backtrack(Graph<T> *g, const unordered_map<string, Edges *> *edges);
+//    void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex);
 //    void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void OtherHeuristic(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 protected:
@@ -161,6 +162,7 @@ protected:
      * Finds the index of the vertex with a given content.
      */
     int findVertexIdx(const T &in) const;
+
 
 };
 
@@ -711,153 +713,106 @@ Graph<T>::~Graph() {
     deleteMatrix(distMatrix, vertexSet.size());
     deleteMatrix(pathMatrix, vertexSet.size());
 }
-//template<class T>
-//Graph<T>::Graph(const unordered_map<string, Vertex<T> *> & vertexSet):vertexSet(vertexSet){}
+
 
 template <class T>
-void testAndVisit(std::queue< Vertex<T>*> &q, Edge<T> *e, Vertex<T> *w) {
-    // Check if the vertex 'w' is not visited and there is residual capacity
-    if (! w->isVisited()) {
-        // Mark 'w' as visited, set the path through which it was reached, and enqueue it
-        w->setVisited(true);
-        w->setPath(e);
-        q.push(w);
-    }
-}
-
-template <class T>
-unsigned int BTUtil(Graph<T> *g, vector<string> path, const unordered_map<string, Edges *> *edges) {
-    unsigned int n = 0;
-    string initial = "0";
-    Vertex<T>* s = g->findVertex(initial);
-
-    s->setVisited(true);
-    std::queue<Vertex<T> *> q;
-    q.push(s);
-
-    while( ! q.empty() ) {
-        auto v = q.front();
-        path.push_back(v->getInfo());
-        q.pop();
-
-        for(auto e: v->getAdj()) {
-            testAndVisit(q, e, e->getDest());
+void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex) {
+    //cout << "teste" << endl;
+    if(path.size() == g->getVertexSet().size()) {
+        for(auto & e : checkVertex->getAdj()) {
+            auto w = e->getDest();
+            if(w == g->findVertex("0")) {
+                //cout << "teste2" << endl;
+                dist += e->getWeight();
+                path.push_back(w->getInfo());
+                if(dist < shortestDist) {
+                    shortestPath = path;
+                    shortestDist = dist;
+                }
+                dist -= e->getWeight();
+                path.pop_back();
+            }
         }
-        n++;
     }
 
+    for(auto & e : checkVertex->getAdj()) {
+        auto w = e->getDest();
+        if (!(w->isVisited())) {
+            //cout << "testeRecursion" << endl;
+            path.push_back(w->getInfo());
+            dist += e->getWeight();
 
-//    while( findPath(g, s) ) {
-//        dist = findDistancia(s);
-//    }
+            w->setVisited(true);
+            BTUtil(g, path, dist, shortestPath, shortestDist, w);
 
-    return n;
+            path.pop_back();
+            dist -= e->getWeight();
+            w->setVisited(false);
+        }
+    }
 }
 
 template<class T>
 void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
-//    int i = 0;
-//    for (auto &pair: *edges) {
-//        i++;
-//        cout << "Node Inicial:" << pair.second->getInitialNode() << "Node Final:" << pair.second->getFinalNode() << "Distancia:" << pair.second->getDistancia() << endl;
-//    }
-//
-//    cout << "N:" << i << endl;
-
     vector<string> path;
-    double min_cost = INF;
-    unsigned int n;
+    vector<string> shortestPath;
+    double dist = 0;
+    double shortestDist = INF;
+    string initial = "0";
+    Vertex<T>* initialVertex = g->findVertex("0");
+    path.push_back(initial);
 
     for (auto v : g->getVertexSet()) {
-        v.second->setVisited(false);
+        if(v.second->getInfo() != initial)
+            v.second->setVisited(false);
+        else v.second->setVisited(true);
     }
 
-    n = BTUtil(g, path, edges);
+    BTUtil(g, path, dist, shortestPath, shortestDist, initialVertex);
 
-    cout << "Path: ";
-    for (unsigned int i = 0; i <= path.size(); ++i) {
-        cout << path.at(i);
-        if (i != path.size()) {
+    cout << "Shortest Path Found: ";
+    for (unsigned int i = 0; i < shortestPath.size(); ++i) {
+        cout << shortestPath.at(i);
+        if (i != shortestPath.size()-1) {
             cout << " -> ";
         }
     }
+    cout << endl;
+    cout << "Total Distance Traveled in path: " << shortestDist << endl;
 }
 
-/*
-#include <vector>
-#include <limits>
-#include <algorithm>
 
-using namespace std;
-
-template <class T>
-void tspBTUtil(const unsigned int **dists, vector<unsigned int>& vertex, unsigned int n, unsigned int& min_path, unsigned int current_pathweight, unsigned int visited, unsigned int count, unsigned int path[]) {
-    // If all cities have been visited, add distance from last city to starting city and update min_path
-    if (count == n) {
-        min_path = min(min_path, current_pathweight + dists[vertex[count - 1]][0]);
-        return;
-    }
-
-    // Try all unvisited cities as next destination
-    for (unsigned int i = 1; i < n; i++) {
-        if (!(visited & (1 << i))) {
-            // Mark city as visited
-            visited |= (1 << i);
-            // Update current path weight
-            unsigned int new_pathweight = current_pathweight + dists[vertex[count - 1]][vertex[i]];
-            // Recursive call for the next city
-            tspBTUtil(dists, vertex, n, min_path, new_pathweight, visited, count + 1, path);
-            // Backtrack
-            visited &= ~(1 << i);
-        }
-    }
-}
-
-template <class T>
-unsigned int tspBT(const unsigned int **dists, unsigned int n, unsigned int path[]) {
-    // Vector to store the indexes of cities
-    vector<unsigned int> vertex;
-    for(unsigned int i = 0; i < n; i++) {
-        if(i != 0) {
-            vertex.push_back(i);
-        }
-    }
-
-    // Initialize minimum distance
-    unsigned int min_path = numeric_limits<int>::max();
-
-    // Mark first city as visited
-    unsigned int visited = 1;
-
-    // Call the recursive function starting from the first city
-    tspBTUtil(dists, vertex, n, min_path, 0, visited, 1, path);
-
-    return min_path;
-}
-
-tspBTUtil is a recursive function that explores all possible paths starting from the first city and
-updates min_path whenever a complete path is found.
-
-visited is used as a bitmask to keep track of visited cities. Each bit represents whether a city
-has been visited or not.
-
-The loop in tspBTUtil iterates over all unvisited cities from the current city and recursively explores paths.
-
-Before making a recursive call, the visited city is marked and the current path weight is updated.
-After the recursive call, the visited city is unmarked to backtrack and explore other paths.
-
-The main tspBT function initializes visited to mark the first city as visited and then
-calls tspBTUtil to start the recursive backtracking process.
- */
-
-#include <algorithm> // for std::fill_n
-
-#include <algorithm> // for std::fill_n
-
-template<class T>
-void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
-
-}
+//template<class T>
+//void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+//    for(auto v: g->getVertexSet()){
+//        v.second->setVisited(false);
+//        v.second->setDist(INF);
+//    }
+//
+//    Vertex<T> *root = g->findVertex("0");
+//    root->setDist(0);
+//    MutablePriorityQueue<T> MPQ;
+//    MPQ.insert(root);
+//    while(!MPQ.empty()){
+//        Vertex<T> *v = MPQ.extractMin();
+//        v->setVisited(true);
+//        for(Edge<T> *e : v->getAdj()){
+//            Vertex<T> *w = e->getDest();
+//            if(!w->isVisited() && e->getWeight() < w->getDist()){
+//                auto dist = w->getDist();
+//                w->setDist(e->getWeight());
+//                w->setPath(e);
+//                if(dist == INF){
+//                    MPQ.insert(w);
+//                }else{
+//                    MPQ.decreaseKey(w);
+//                }
+//            }
+//        }
+//    }
+//
+//
+//}
 
 
 

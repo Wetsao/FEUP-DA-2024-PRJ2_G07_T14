@@ -52,11 +52,11 @@ void DataReader::cenario41() {
 }
 
 void DataReader::cenario42() {
-    TriangleApproximation(&g, &getEdges());
+    //TriangleApproximation(&g, &getEdges());
 }
 
 void DataReader::cenario43() {
-    OtherHeuristic(&g, &getEdges());
+    //OtherHeuristic(&g, &getEdges());
 }
 
 void DataReader::cenario44() {
