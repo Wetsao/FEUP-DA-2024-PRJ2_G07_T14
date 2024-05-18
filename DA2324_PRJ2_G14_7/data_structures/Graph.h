@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <iomanip>
+#include <chrono>
 #include "data_structures/MutablePriorityQueue.h"
 #include "../Class/Edges.h"
 
@@ -716,13 +717,16 @@ Graph<T>::~Graph() {
 
 
 template <class T>
-void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex) {
+void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex, int &numPathsTested, int &numRecursiveCalls , int &numBackTracks) {
     //cout << "teste" << endl;
+    numRecursiveCalls++;
+
     if(path.size() == g->getVertexSet().size()) {
         for(auto & e : checkVertex->getAdj()) {
             auto w = e->getDest();
             if(w == g->findVertex("0")) {
                 //cout << "teste2" << endl;
+                numPathsTested++;
                 dist += e->getWeight();
                 path.push_back(w->getInfo());
                 if(dist < shortestDist) {
@@ -733,6 +737,8 @@ void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shor
                 path.pop_back();
             }
         }
+        numBackTracks++;
+        return;
     }
 
     for(auto & e : checkVertex->getAdj()) {
@@ -741,13 +747,15 @@ void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shor
             //cout << "testeRecursion" << endl;
             path.push_back(w->getInfo());
             dist += e->getWeight();
-
             w->setVisited(true);
-            BTUtil(g, path, dist, shortestPath, shortestDist, w);
+
+            BTUtil(g, path, dist, shortestPath, shortestDist, w, numPathsTested, numRecursiveCalls ,numBackTracks);
 
             path.pop_back();
             dist -= e->getWeight();
             w->setVisited(false);
+
+            numBackTracks++;
         }
     }
 }
@@ -758,17 +766,34 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     vector<string> shortestPath;
     double dist = 0;
     double shortestDist = INF;
+    int numPathsTested = 0;
+    int numRecursiveCalls = 0;
+    int numBackTracks = 0;
     string initial = "0";
     Vertex<T>* initialVertex = g->findVertex("0");
-    path.push_back(initial);
+//    path.push_back(initial);
 
     for (auto v : g->getVertexSet()) {
         if(v.second->getInfo() != initial)
             v.second->setVisited(false);
-        else v.second->setVisited(true);
+//        else v.second->setVisited(true);
     }
 
-    BTUtil(g, path, dist, shortestPath, shortestDist, initialVertex);
+    auto start = chrono::high_resolution_clock::now();
+
+    if (initialVertex) {
+        initialVertex->setVisited(true);
+        path.push_back(initialVertex->getInfo());
+        BTUtil(g, path, dist, shortestPath, shortestDist, initialVertex, numPathsTested, numRecursiveCalls ,numBackTracks);
+        initialVertex->setVisited(false);
+    }
+
+//    BTUtil(g, path, dist, shortestPath, shortestDist, initialVertex, numPathsTested, numRecursiveCalls ,numBackTracks);
+
+    auto end = chrono::high_resolution_clock::now();
+    auto durationMicroseconds = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    auto durationMilliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
 
     cout << "Shortest Path Found: ";
     for (unsigned int i = 0; i < shortestPath.size(); ++i) {
@@ -779,6 +804,15 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     }
     cout << endl;
     cout << "Total Distance Traveled in path: " << shortestDist << endl;
+    cout << "Total Number of Paths Tested: " << numPathsTested << endl;
+    cout << "Total Number of Recursive Calls made: " << numRecursiveCalls << endl;
+    cout << "Total Number of Backtracks done: " << numBackTracks << endl;
+    if(duration != 0)
+        cout << "Execution time: " << duration << " seconds" << endl;
+    else if(durationMilliseconds != 0)
+        cout << "Execution time: " << durationMilliseconds << " milliseconds" << endl;
+    else
+        cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
 }
 
 

@@ -33,6 +33,7 @@ void DataReader::getEdgesFile(const string &filename) {
             g.addVertex(origem);
             g.addVertex(destino);
             g.addBidirectionalEdge(origem, destino, dist);
+            //g.addEdge(origem, destino, dist);
         } catch (const std::invalid_argument& e) {
             cerr << "Invalid argument: " << e.what() << endl;
         } catch (const std::out_of_range& e) {
