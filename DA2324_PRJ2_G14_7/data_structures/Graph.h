@@ -149,7 +149,8 @@ public:
     bool isDAG() const;
     bool dfsIsDAG(Vertex<T> *v) const;
     std::vector<T> topsort() const;
-    void findMST();
+
+    vector<Vertex<T>*> nearestNeighborTSP();
 
 //    void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges);
@@ -787,256 +788,79 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 }
 
 
-
-#include <algorithm> // for std::fill_n
-
-#include <algorithm> // for std::fill_n
-
 template<class T>
 void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 
 }
 
-
-/*
 template <class T>
-void Graph<T>::findMST() {
-    // Initialize a priority queue to store vertices with their corresponding key values
-    std::priority_queue<std::pair<double, Vertex<T>*>, std::vector<std::pair<double, Vertex<T>*>>, std::greater<std::pair<double, Vertex<T>*>>> pq;
+vector<Vertex<T>*> Graph<T>::nearestNeighborTSP() {
+    vector<Vertex<T>*> tour;
 
-    // Initialize a set to keep track of vertices included in MST
-    std::unordered_set<Vertex<T>*> included;
-
-    // Initialize key values for all vertices to infinity
-    for (auto& pair : vertexSet) {
-        pair.second->setDist(INF);
-    }
-
-    // Start from the first vertex
-    Vertex<T>* start = vertexSet.begin()->second;
-    start->setDist(0);
-
-    // Push the first vertex into the priority queue
-    pq.push({0, start});
-
-    while (!pq.empty()) {
-        // Extract the vertex with the minimum key value
-        auto current = pq.top().second;
-        pq.pop();
-
-        // Mark the current vertex as included in MST
-        included.insert(current);
-
-        // Update key values of adjacent vertices
-        for (auto& edge : current->getAdj()) {
-            auto neighbor = edge->getDest();
-            double weight = edge->getWeight();
-            if (included.find(neighbor) == included.end() && weight < neighbor->getDist()) {
-                neighbor->setDist(weight);
-                neighbor->setPath(edge);
-                pq.push({weight, neighbor});
-            }
-        }
-    }
-
-    // Now, you can construct the MST using the information stored in the vertices
-    // For example, you can iterate over each vertex and print its parent in the MST
-    for (auto& pair : vertexSet) {
-        auto vertex = pair.second;
-        auto parentEdge = vertex->getPath();
-        if (parentEdge != nullptr) {
-            auto parentVertex = parentEdge->getOrig();
-            // Here, you can construct the MST edges using parentEdge and vertex
-        }
-    }
-}
-*/
-template <class T>
-static vector<Vertex<T>*> findApproximateTSP(Graph<T>* graph);
-
-template <class T>
-    vector<Vertex<T>*> findApproximateTSP(Graph<T>& graph) {
-    // Step 1: Find a minimum spanning tree (MST) of the graph
-    Graph<T> mst = graph->findMST();
-
-    // Step 2: Find vertices with odd degree in the MST
-    vector<int> odds;
-    findOdds(graph->findMST(), odds);
-
-    // Step 3: Find a perfect matching for the vertices with odd degree
-    perfectMatching(graph->findMST(), odds);
-
-    // Step 4: Combine the MST and the matching to form a multigraph
-    Graph<T> combinedGraph = mst;
-    for (auto& v : graph.getVertexSet()) {
-        for (auto& edge : v.second->getAdj()) {
-            combinedGraph.addEdge(v.second->getInfo(), edge->getDest()->getInfo(), edge->getWeight());
-        }
-    }
-
-    // Step 5: Find an Eulerian tour in the multigraph
-    vector<Vertex<T>*> eulerTour;
-    eulerTour(combinedGraph, combinedGraph.getVertexSet().begin()->second, eulerTour);
-
-    // Step 6: Make the Eulerian tour into a Hamiltonian cycle
-    makeHamiltonian(eulerTour);
-
-    return eulerTour;
-}
-
-template <class T>
-int getMinIndex(int key[], bool mst[], int n) {
-    // initialize min and min_index
-    int min = numeric_limits<int>::max();
-    int min_index;
-
-    // iterate through each vertex
-    for (int i = 0; i < n; i++) {
-        // if vertex hasn't been visited and has a smaller key than min
-        if (!mst[i] && key[i] < min) {
-            // reassign min and min_index to the values from this node
-            min = key[i];
-            min_index = i;
-        }
-    }
-
-    return min_index;
-}
-
-template <class T>
-void findOdds(const Graph<T>& mst, vector<int>& odds) {
-    for (auto& v : mst.getVertexSet()) {
-        if (v.second->getDegree() % 2 != 0) {
-            odds.push_back(v.first);
-        }
-    }
-}
-
-template <class T>
-void perfectMatching(Graph<T>& graph, vector<int>& odds) {
-    int closest, length;
-    while (!odds.empty()) {
-        int first = odds.front();
-        auto it = odds.begin() + 1;
-        length = numeric_limits<int>::max();
-        for (; it != odds.end(); ++it) {
-            if (graph.getEdgeWeight(first, *it) < length) {
-                length = graph.getEdgeWeight(first, *it);
-                closest = *it;
-            }
-        }
-        graph.addEdge(first, closest, length);
-        graph.addEdge(closest, first, length);
-        odds.erase(remove(odds.begin(), odds.end(), closest), odds.end());
-        odds.erase(remove(odds.begin(), odds.end(), first), odds.end());
-    }
-}
-
-template <class T>
-void eulerTour(const Graph<T>& graph, Vertex<T>* start, vector<Vertex<T>*>& tour) {
-    std::stack<Vertex<T>*> stack;
-    Vertex<T>* pos = start;
-    tour.push_back(pos);
-    while (!stack.empty() || !pos->getAdj().empty()) {
-        if (pos->getAdj().empty()) {
-            pos = stack.top();
-            stack.pop();
-        } else {
-            stack.push(pos);
-            auto edge = pos->getAdj().front();
-            pos->removeEdge(edge);
-            pos = edge->getDest();
-            tour.push_back(pos);
-        }
-    }
-}
-
-template <class T>
-void makeHamiltonian(vector<Vertex<T>*>& tour) {
-    // Remove visited nodes from Euler tour
+    // Initialize a set to keep track of visited vertices
     unordered_set<Vertex<T>*> visited;
-    auto cur = tour.begin();
-    auto iter = tour.begin() + 1;
-    int pathCost = 0;
 
-    visited.insert(*cur);
-
-    while (iter != tour.end()) {
-        if (visited.find(*iter) == visited.end()) {
-            pathCost += (*cur)->getEdgeWeightTo(*iter);
-            cur = iter;
-            visited.insert(*cur);
-            iter = cur + 1;
-        } else {
-            iter = tour.erase(iter);
-        }
+    // Choose an arbitrary starting vertex (in this case, the first vertex)
+    if (vertexSet.empty()) {
+        return tour; // Return an empty tour if the graph is empty
     }
-    // Add distance to root
-    if (iter != tour.end()) {
-        pathCost += (*cur)->getEdgeWeightTo(tour.front());
-    }
-}
+    string initial = "0";
+    Vertex<T>* currentVertex = findVertex("0");
 
-template <class T>
-double calculateTourLength(const vector<Vertex<T>*>& tour) {
-    double length = 0;
-    for (size_t i = 0; i < tour.size() - 1; ++i) {
-        length += tour[i]->getEdgeWeightTo(tour[i + 1]);
-    }
-    // Add distance to root
-    length += tour.back()->getEdgeWeightTo(tour.front());
-    return length;
-}
+    tour.push_back(currentVertex);
+    visited.insert(currentVertex);
 
-template <class T>
-void Graph<T>::findMST() {
-    // Initialize a priority queue to store vertices with their corresponding key values
-    priority_queue<std::pair<double, Vertex<T>*>, vector<pair<double, Vertex<T>*>>, greater<std::pair<double, Vertex<T>*>>> pq;
+    // Repeat until all vertices are visited
+    while (visited.size() < vertexSet.size()) {
+        double minDistance = std::numeric_limits<double>::max();
+        Vertex<T>* nearestNeighbor = nullptr;
 
-    // Initialize a set to keep track of vertices included in MST
-    unordered_set<Vertex<T>*> included;
-
-    // Start from any vertex (here, we choose the first vertex)
-    Vertex<T>* start = vertexSet.begin()->second;
-
-    // Push the start vertex into the priority queue with key value 0
-    pq.push({0, start});
-
-    while (!pq.empty()) {
-        // Extract the vertex with the minimum key value
-        auto current = pq.top().second;
-        pq.pop();
-
-        // If the current vertex is already included in MST, continue
-        if (included.find(current) != included.end()) {
-            continue;
-        }
-
-        // Mark the current vertex as included in MST
-        included.insert(current);
-
-        // Update key values of adjacent vertices and push them into the priority queue
-        for (auto& edge : current->getAdj()) {
-            auto neighbor = edge->getDest();
-            double weight = edge->getWeight();
-            if (included.find(neighbor) == included.end()) {
-                neighbor->setDist(weight);
-                neighbor->setPath(edge);
-                pq.push({weight, neighbor});
+        // Find the nearest unvisited neighbor of the current vertex
+        for (Edge<T>* edge : currentVertex->getAdj()) {
+            Vertex<T>* neighbor = edge->getDest();
+            if (visited.find(neighbor) == visited.end() && edge->getWeight() < minDistance) {
+                minDistance = edge->getWeight();
+                nearestNeighbor = neighbor;
             }
         }
+
+        if (nearestNeighbor) {
+            // Mark the nearest neighbor as visited
+            visited.insert(nearestNeighbor);
+            // Add the nearest neighbor to the tour
+            tour.push_back(nearestNeighbor);
+            // Update the current vertex to be the nearest neighbor
+            currentVertex = nearestNeighbor;
+        } else {
+            // If no unvisited neighbors found, break the loop
+            break;
+        }
     }
 
-    // At the end of the loop, the MST edges are stored in the 'path' attribute of each vertex
+    // Add the edge from the last vertex to the starting vertex to complete the tour
+    if (!tour.empty()) {
+        tour.push_back(tour.front());
+    }
+
+    return tour;
 }
+
 
 template<class T>
-void Christofides (Graph<T> *g, const unordered_map<string, Edges *> *edges) {
-    vector<Vertex<T>*> tspTour = findApproximateTSP(*g);
-    for (Vertex<T>* vertex : tspTour) {
-        cout << vertex->getInfo() << " ";
+void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+    vector<Vertex<T>*> tspTour = g->nearestNeighborTSP();
+//    for (auto & vertex : tspTour) {
+//        cout << vertex->getInfo() << " ";
+//    }
+//    cout << endl;
+    cout << "Shortest Path Found: ";
+    for (unsigned int i = 0; i < tspTour.size(); ++i) {
+        cout << tspTour.at(i)->getInfo();
+        if (i != tspTour.size()-1) {
+            cout << " -> ";
+        }
     }
-    cout << std::endl;
+    cout << endl;
 }
 
 #endif // FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H

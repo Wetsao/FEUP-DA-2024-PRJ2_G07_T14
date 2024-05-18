@@ -33,6 +33,7 @@ void Menu::getDisplay(){
                             state++;
                             break;
                         case 3:
+                            reader.cenario43();
                             state++;
                             break;
                         case 4:

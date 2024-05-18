@@ -56,7 +56,7 @@ void DataReader::cenario42() {
 }
 
 void DataReader::cenario43() {
-    OtherHeuristic(&g, &getEdges());
+    NearestNeighbor(&g, &getEdges());
 }
 
 void DataReader::cenario44() {
