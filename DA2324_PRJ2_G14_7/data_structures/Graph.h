@@ -149,6 +149,7 @@ public:
     bool isDAG() const;
     bool dfsIsDAG(Vertex<T> *v) const;
     std::vector<T> topsort() const;
+    void findMST();
 
 //    void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges);
@@ -164,7 +165,6 @@ protected:
      */
     int findVertexIdx(const T &in) const;
 
-    void findMST();
 };
 
 void deleteMatrix(int **m, int n);
@@ -851,31 +851,20 @@ void Graph<T>::findMST() {
     }
 }
 */
+template <class T>
+static vector<Vertex<T>*> findApproximateTSP(Graph<T>* graph);
 
 template <class T>
-class Christofides {
-public:
-    static std::vector<Vertex<T>*> findApproximateTSP(Graph<T>& graph);
-private:
-    static int getMinIndex(int key[], bool mst[], int n);
-    static void findOdds(const Graph<T>& mst, std::vector<int>& odds);
-    static void perfectMatching(Graph<T>& graph, std::vector<int>& odds);
-    static void eulerTour(const Graph<T>& graph, Vertex<T>* start, std::vector<Vertex<T>*>& tour);
-    static void makeHamiltonian(std::vector<Vertex<T>*>& tour);
-    static double calculateTourLength(const std::vector<Vertex<T>*>& tour);
-};
-
-template <class T>
-std::vector<Vertex<T>*> Christofides<T>::findApproximateTSP(Graph<T>& graph) {
+    vector<Vertex<T>*> findApproximateTSP(Graph<T>& graph) {
     // Step 1: Find a minimum spanning tree (MST) of the graph
-    Graph<T> mst = graph.findMinimumSpanningTree();
+    Graph<T> mst = graph->findMST();
 
     // Step 2: Find vertices with odd degree in the MST
-    std::vector<int> odds;
-    findOdds(mst, odds);
+    vector<int> odds;
+    findOdds(graph->findMST(), odds);
 
     // Step 3: Find a perfect matching for the vertices with odd degree
-    perfectMatching(graph, odds);
+    perfectMatching(graph->findMST(), odds);
 
     // Step 4: Combine the MST and the matching to form a multigraph
     Graph<T> combinedGraph = mst;
@@ -886,7 +875,7 @@ std::vector<Vertex<T>*> Christofides<T>::findApproximateTSP(Graph<T>& graph) {
     }
 
     // Step 5: Find an Eulerian tour in the multigraph
-    std::vector<Vertex<T>*> eulerTour;
+    vector<Vertex<T>*> eulerTour;
     eulerTour(combinedGraph, combinedGraph.getVertexSet().begin()->second, eulerTour);
 
     // Step 6: Make the Eulerian tour into a Hamiltonian cycle
@@ -896,9 +885,9 @@ std::vector<Vertex<T>*> Christofides<T>::findApproximateTSP(Graph<T>& graph) {
 }
 
 template <class T>
-int Christofides<T>::getMinIndex(int key[], bool mst[], int n) {
+int getMinIndex(int key[], bool mst[], int n) {
     // initialize min and min_index
-    int min = std::numeric_limits<int>::max();
+    int min = numeric_limits<int>::max();
     int min_index;
 
     // iterate through each vertex
@@ -915,7 +904,7 @@ int Christofides<T>::getMinIndex(int key[], bool mst[], int n) {
 }
 
 template <class T>
-void Christofides<T>::findOdds(const Graph<T>& mst, std::vector<int>& odds) {
+void findOdds(const Graph<T>& mst, vector<int>& odds) {
     for (auto& v : mst.getVertexSet()) {
         if (v.second->getDegree() % 2 != 0) {
             odds.push_back(v.first);
@@ -924,12 +913,12 @@ void Christofides<T>::findOdds(const Graph<T>& mst, std::vector<int>& odds) {
 }
 
 template <class T>
-void Christofides<T>::perfectMatching(Graph<T>& graph, std::vector<int>& odds) {
+void perfectMatching(Graph<T>& graph, vector<int>& odds) {
     int closest, length;
     while (!odds.empty()) {
         int first = odds.front();
         auto it = odds.begin() + 1;
-        length = std::numeric_limits<int>::max();
+        length = numeric_limits<int>::max();
         for (; it != odds.end(); ++it) {
             if (graph.getEdgeWeight(first, *it) < length) {
                 length = graph.getEdgeWeight(first, *it);
@@ -938,13 +927,13 @@ void Christofides<T>::perfectMatching(Graph<T>& graph, std::vector<int>& odds) {
         }
         graph.addEdge(first, closest, length);
         graph.addEdge(closest, first, length);
-        odds.erase(std::remove(odds.begin(), odds.end(), closest), odds.end());
-        odds.erase(std::remove(odds.begin(), odds.end(), first), odds.end());
+        odds.erase(remove(odds.begin(), odds.end(), closest), odds.end());
+        odds.erase(remove(odds.begin(), odds.end(), first), odds.end());
     }
 }
 
 template <class T>
-void Christofides<T>::eulerTour(const Graph<T>& graph, Vertex<T>* start, std::vector<Vertex<T>*>& tour) {
+void eulerTour(const Graph<T>& graph, Vertex<T>* start, vector<Vertex<T>*>& tour) {
     std::stack<Vertex<T>*> stack;
     Vertex<T>* pos = start;
     tour.push_back(pos);
@@ -963,9 +952,9 @@ void Christofides<T>::eulerTour(const Graph<T>& graph, Vertex<T>* start, std::ve
 }
 
 template <class T>
-void Christofides<T>::makeHamiltonian(std::vector<Vertex<T>*>& tour) {
+void makeHamiltonian(vector<Vertex<T>*>& tour) {
     // Remove visited nodes from Euler tour
-    std::unordered_set<Vertex<T>*> visited;
+    unordered_set<Vertex<T>*> visited;
     auto cur = tour.begin();
     auto iter = tour.begin() + 1;
     int pathCost = 0;
@@ -989,7 +978,7 @@ void Christofides<T>::makeHamiltonian(std::vector<Vertex<T>*>& tour) {
 }
 
 template <class T>
-double Christofides<T>::calculateTourLength(const std::vector<Vertex<T>*>& tour) {
+double calculateTourLength(const vector<Vertex<T>*>& tour) {
     double length = 0;
     for (size_t i = 0; i < tour.size() - 1; ++i) {
         length += tour[i]->getEdgeWeightTo(tour[i + 1]);
@@ -1002,10 +991,10 @@ double Christofides<T>::calculateTourLength(const std::vector<Vertex<T>*>& tour)
 template <class T>
 void Graph<T>::findMST() {
     // Initialize a priority queue to store vertices with their corresponding key values
-    std::priority_queue<std::pair<double, Vertex<T>*>, std::vector<std::pair<double, Vertex<T>*>>, std::greater<std::pair<double, Vertex<T>*>>> pq;
+    priority_queue<std::pair<double, Vertex<T>*>, vector<pair<double, Vertex<T>*>>, greater<std::pair<double, Vertex<T>*>>> pq;
 
     // Initialize a set to keep track of vertices included in MST
-    std::unordered_set<Vertex<T>*> included;
+    unordered_set<Vertex<T>*> included;
 
     // Start from any vertex (here, we choose the first vertex)
     Vertex<T>* start = vertexSet.begin()->second;
@@ -1042,8 +1031,12 @@ void Graph<T>::findMST() {
 }
 
 template<class T>
-void OtherHeuristic(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
-
+void Christofides (Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+    vector<Vertex<T>*> tspTour = findApproximateTSP(*g);
+    for (Vertex<T>* vertex : tspTour) {
+        cout << vertex->getInfo() << " ";
+    }
+    cout << std::endl;
 }
 
 #endif // FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H
