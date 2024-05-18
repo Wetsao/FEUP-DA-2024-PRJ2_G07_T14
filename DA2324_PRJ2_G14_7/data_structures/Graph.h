@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <fstream>
 #include <iomanip>
+#include <chrono>
 #include "data_structures/MutablePriorityQueue.h"
 #include "../Class/Edges.h"
 
@@ -848,11 +849,16 @@ vector<Vertex<T>*> Graph<T>::nearestNeighborTSP() {
 
 template<class T>
 void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+    auto start = chrono::high_resolution_clock::now();
+
     vector<Vertex<T>*> tspTour = g->nearestNeighborTSP();
-//    for (auto & vertex : tspTour) {
-//        cout << vertex->getInfo() << " ";
-//    }
-//    cout << endl;
+
+    auto end = chrono::high_resolution_clock::now();
+    auto durationMicroseconds = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    auto durationMilliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
+
+
     cout << "Shortest Path Found: ";
     for (unsigned int i = 0; i < tspTour.size(); ++i) {
         cout << tspTour.at(i)->getInfo();
@@ -861,6 +867,13 @@ void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
         }
     }
     cout << endl;
+
+    if(duration != 0)
+        cout << "Execution time: " << duration << " seconds" << endl;
+    else if(durationMilliseconds != 0)
+        cout << "Execution time: " << durationMilliseconds << " milliseconds" << endl;
+    else
+        cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
 }
 
 #endif // FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H

@@ -21,7 +21,7 @@ void Menu::getDisplay(){
                     cout << "Select Approach:" << endl;
                     cout << "1: Bracktracking" << endl;
                     cout << "2: Triangle Approximation" << endl;
-                    cout << "3: Other Heuristic" << endl;
+                    cout << "3: Nearest Neighbor" << endl;
                     cout << "4: TSP in the Real World" << endl;
                     cin >> instruction2;
                     switch(instruction2){
