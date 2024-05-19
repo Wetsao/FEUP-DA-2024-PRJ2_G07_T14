@@ -928,7 +928,7 @@ void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *ed
     else
         cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
 }
-}
+
 
 template <class T>
 vector<Vertex<T>*> Graph<T>::nearestNeighborTSP() {
