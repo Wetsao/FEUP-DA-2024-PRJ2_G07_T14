@@ -7,12 +7,15 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <stack>
 #include <limits>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include <iomanip>
 #include <chrono>
+#include <cmath>
 #include "data_structures/MutablePriorityQueue.h"
 #include "../Class/Edges.h"
 
@@ -40,6 +43,9 @@ public:
     double getDist() const;
     Edge<T> *getPath() const;
     std::vector<Edge<T> *> getIncoming() const;
+    void addChild(string s);
+    void eraseChild();
+    std::vector<string> getChild();
 
     void setInfo(T info);
     void setVisited(bool visited);
@@ -59,6 +65,7 @@ public:
 protected:
     T info;                // info node
     std::vector<Edge<T> *> adj;  // outgoing edges
+    std::vector<string> child;
 
     double flow = 0; // for flow-related problems
 
@@ -151,6 +158,9 @@ public:
 
 //    void Backtrack(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex);
+    vector<Vertex<T>*> nearestNeighborTSP();
+
+//    void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void OtherHeuristic(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 protected:
@@ -287,6 +297,21 @@ void Vertex<T>::setProcesssing(bool processing) {
 template <class T>
 void Vertex<T>::setIndegree(unsigned int indegree) {
     this->indegree = indegree;
+}
+
+template <class T>
+void Vertex<T>::addChild(std::string s) {
+    this->child.push_back(s);
+}
+
+template <class T>
+void Vertex<T>::eraseChild() {
+    child.clear();
+}
+
+template <class T>
+std::vector<string> Vertex<T>::getChild(){
+    return this->child;
 }
 
 template <class T>
@@ -452,7 +477,7 @@ bool Graph<T>::removeVertex(const T &in) {
             vertexSet.erase(v->getInfo());
             delete v;
             return true;
-         }
+        }
     }
 
     return false;
@@ -816,43 +841,188 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 }
 
 
-//template<class T>
-//void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
-//    for(auto v: g->getVertexSet()){
-//        v.second->setVisited(false);
-//        v.second->setDist(INF);
-//    }
-//
-//    Vertex<T> *root = g->findVertex("0");
-//    root->setDist(0);
-//    MutablePriorityQueue<T> MPQ;
-//    MPQ.insert(root);
-//    while(!MPQ.empty()){
-//        Vertex<T> *v = MPQ.extractMin();
-//        v->setVisited(true);
-//        for(Edge<T> *e : v->getAdj()){
-//            Vertex<T> *w = e->getDest();
-//            if(!w->isVisited() && e->getWeight() < w->getDist()){
-//                auto dist = w->getDist();
-//                w->setDist(e->getWeight());
-//                w->setPath(e);
-//                if(dist == INF){
-//                    MPQ.insert(w);
-//                }else{
-//                    MPQ.decreaseKey(w);
-//                }
-//            }
-//        }
-//    }
-//
-//
-//}
-
 
 
 template<class T>
-void OtherHeuristic(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 
+    std::unordered_map<string , Vertex<T> *> vertix = g->getVertexSet();
+    for(auto e: vertix){
+        e.second->setVisited(false);
+        e.second->setDist(INF);
+        e.second->eraseChild();
+    }
+
+    Vertex<T> *r = g->findVertex("0");
+    r->setDist(0);
+    MutablePriorityQueue<Vertex<T>> pq;
+    pq.insert(r);
+    while(!pq.empty()){
+        auto i = pq.extractMin();
+        i->setVisited(true);
+        if(i->getInfo()!= "0"){
+            i->getPath()->getOrig()->addChild(i->getInfo());
+        }
+        for(auto & q: i->getAdj()){
+            Vertex<T> *w = q->getDest();
+            if (!w->isVisited()){
+                auto dist2 = w->getDist();
+                if(q->getWeight() < dist2){
+                    w->setDist(q->getWeight());
+                    w->setPath(q);
+                    if(dist2 == INF){
+                        pq.insert(w);
+                    }else{
+                        pq.decreaseKey(w);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<std::string> result;
+
+    std::stack<Vertex<T> *> stack;
+    stack.push(r);
+
+    while (!stack.empty()) {
+        Vertex<T> *v = stack.top();
+        stack.pop();
+
+        for (const auto &child : v->getChild()) {
+            stack.push(g->findVertex(child));
+        }
+
+        result.push_back(v->getInfo());
+    }
+
+    result.push_back("0");
+    double totalDistance = 0;
+    for (int l = 0; l < result.size() - 1; ++l) {
+        auto j = g->findVertex(result[l]);
+        for (auto & k: j->getAdj()){
+            if(k->getDest()->getInfo()==result[l+1]){
+                totalDistance += k->getWeight();
+            }
+        }
+    }
+
+
+    std::cout << "Approximate Path Found: ";
+    for (size_t i = 0; i < result.size(); ++i) {
+        std::cout << result[i];
+        if (i != result.size() - 1) {
+            std::cout << " -> ";
+        }
+    }
+    std::cout << std::endl;
+    std::cout << "Total Distance Traveled in path: " << totalDistance << std::endl;
+}
+
+template <class T>
+vector<Vertex<T>*> Graph<T>::nearestNeighborTSP() {
+    vector<Vertex<T>*> tour;
+
+    // Initialize a set to keep track of visited vertices
+    unordered_set<Vertex<T>*> visited;
+
+    // Choose an arbitrary starting vertex (in this case, the first vertex)
+    if (vertexSet.empty()) {
+        return tour; // Return an empty tour if the graph is empty
+    }
+    string initial = "0";
+    Vertex<T>* currentVertex = findVertex("0");
+
+    tour.push_back(currentVertex);
+    visited.insert(currentVertex);
+
+    // Repeat until all vertices are visited
+    while (visited.size() < vertexSet.size()) {
+        double minDistance = std::numeric_limits<double>::max();
+        Vertex<T>* nearestNeighbor = nullptr;
+
+        // Find the nearest unvisited neighbor of the current vertex
+        for (Edge<T>* edge : currentVertex->getAdj()) {
+            Vertex<T>* neighbor = edge->getDest();
+            if (visited.find(neighbor) == visited.end() && edge->getWeight() < minDistance) {
+                minDistance = edge->getWeight();
+                nearestNeighbor = neighbor;
+            }
+        }
+
+        if (nearestNeighbor) {
+            // Mark the nearest neighbor as visited
+            visited.insert(nearestNeighbor);
+            // Add the nearest neighbor to the tour
+            tour.push_back(nearestNeighbor);
+            // Update the current vertex to be the nearest neighbor
+            currentVertex = nearestNeighbor;
+        } else {
+            // If no unvisited neighbors found, break the loop
+            break;
+        }
+    }
+
+    // Add the edge from the last vertex to the starting vertex to complete the tour
+    if (!tour.empty()) {
+        tour.push_back(tour.front());
+    }
+
+    return tour;
+}
+
+/*
+ * template<class T>
+double calculateDistance(Vertex<T>* v1, Vertex<T>* v2) {
+    // Example using Euclidean distance
+    double dx = v1->x - v2->x;
+    double dy = v1->y - v2->y;
+    return sqrt(dx * dx + dy * dy);
+}
+*/
+
+template<class T>
+double getEdgeWeight(Vertex<T>* v1, Vertex<T>* v2) {
+    for (auto & e : v1->getAdj()) {
+        if (e->getDest() == v2) {
+            return e->getWeight();
+        }
+    }
+    return numeric_limits<double>::infinity(); // Or some appropriate error value
+}
+
+template<class T>
+void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+    auto start = chrono::high_resolution_clock::now();
+
+    vector<Vertex<T>*> tspTour = g->nearestNeighborTSP();
+
+    auto end = chrono::high_resolution_clock::now();
+    auto durationMicroseconds = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    auto durationMilliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
+
+    double totalDistance = 0.0;
+    for (size_t i = 0; i < tspTour.size() - 1; i++) {
+        totalDistance+= getEdgeWeight(tspTour[i], tspTour[i + 1]);
+    }
+
+    cout << "Shortest Path Found: ";
+    for (unsigned int i = 0; i < tspTour.size(); ++i) {
+        cout << tspTour.at(i)->getInfo();
+        if (i != tspTour.size()-1) {
+            cout << " -> ";
+        }
+    }
+    cout << endl;
+
+    cout << "Total distance:" << totalDistance << endl;
+
+    if(duration != 0)
+        cout << "Execution time: " << duration << " seconds" << endl;
+    else if(durationMilliseconds != 0)
+        cout << "Execution time: " << durationMilliseconds << " milliseconds" << endl;
+    else
+        cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
 }
 
 #endif // FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H

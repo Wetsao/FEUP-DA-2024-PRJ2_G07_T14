@@ -22,7 +22,7 @@ void Menu::getDisplay(){
                     cout << "Select Approach:" << endl;
                     cout << "1: Bracktracking" << endl;
                     cout << "2: Triangle Approximation" << endl;
-                    cout << "3: Other Heuristic" << endl;
+                    cout << "3: Nearest Neighbor" << endl;
                     cout << "4: TSP in the Real World" << endl;
                     cin >> instruction2;
                     switch(instruction2){
@@ -34,6 +34,7 @@ void Menu::getDisplay(){
                             state++;
                             break;
                         case 3:
+                            reader.cenario43();
                             state++;
                             break;
                         case 4:
