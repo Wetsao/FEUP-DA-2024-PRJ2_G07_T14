@@ -846,13 +846,14 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 template<class T>
 void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 
-    std::unordered_map<string , Vertex<T> *> vertix = g->getVertexSet();
+    unordered_map<string , Vertex<T> *> vertix = g->getVertexSet();
     for(auto e: vertix){
         e.second->setVisited(false);
         e.second->setDist(INF);
         e.second->eraseChild();
     }
 
+    auto start = chrono::high_resolution_clock::now();
     Vertex<T> *r = g->findVertex("0");
     r->setDist(0);
     MutablePriorityQueue<Vertex<T>> pq;
@@ -879,9 +880,9 @@ void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *ed
             }
         }
     }
-    std::vector<std::string> result;
+    vector<string> result;
 
-    std::stack<Vertex<T> *> stack;
+    stack<Vertex<T> *> stack;
     stack.push(r);
 
     while (!stack.empty()) {
@@ -906,16 +907,27 @@ void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *ed
         }
     }
 
-
-    std::cout << "Approximate Path Found: ";
+    auto end = chrono::high_resolution_clock::now();
+    auto durationMicroseconds = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    auto durationMilliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
+    
+    cout << "Approximate Path Found: ";
     for (size_t i = 0; i < result.size(); ++i) {
-        std::cout << result[i];
+        cout << result[i];
         if (i != result.size() - 1) {
-            std::cout << " -> ";
+            cout << " -> ";
         }
     }
-    std::cout << std::endl;
-    std::cout << "Total Distance Traveled in path: " << totalDistance << std::endl;
+    cout << endl;
+    cout << "Total Distance Traveled in path: " << totalDistance << endl;
+    if(duration != 0)
+        cout << "Execution time: " << duration << " seconds" << endl;
+    else if(durationMilliseconds != 0)
+        cout << "Execution time: " << durationMilliseconds << " milliseconds" << endl;
+    else
+        cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
+}
 }
 
 template <class T>
