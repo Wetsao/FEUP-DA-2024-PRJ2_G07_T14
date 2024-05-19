@@ -999,7 +999,7 @@ double getEdgeWeight(Vertex<T>* v1, Vertex<T>* v2) {
             return e->getWeight();
         }
     }
-    return numeric_limits<double>::infinity(); // Or some appropriate error value
+    return numeric_limits<double>::infinity();
 }
 
 template<class T>
