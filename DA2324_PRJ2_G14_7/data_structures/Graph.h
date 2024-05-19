@@ -158,8 +158,14 @@ public:
 
 //    void Backtrack(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex);
-    vector<Vertex<T>*> nearestNeighborTSP();
+    void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex, int &numPathsTested, int &numRecursiveCalls , int &numBackTracks);
+    void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 
+    void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges);
+
+    vector<Vertex<T>*> nearestNeighborTSP();
+    double getEdgeWeight(Vertex<T>* v1, Vertex<T>* v2);
+    void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges);
 //    void OtherHeuristic(Graph<T> *g, const unordered_map<string, Edges *> *edges);
@@ -741,6 +747,23 @@ Graph<T>::~Graph() {
 }
 
 
+
+/**
+ * @brief Utility function for the Backtracking TSP algorithm.
+ *
+ * This function is called recursively to explore all possible paths and find the shortest path.
+ *
+ * @tparam T The type of the vertex information.
+ * @param g Pointer to the graph.
+ * @param path Current path being explored.
+ * @param dist Current distance of the path being explored.
+ * @param shortestPath The shortest path found so far.
+ * @param shortestDist The distance of the shortest path found so far.
+ * @param checkVertex The current vertex being checked.
+ * @param numPathsTested The number of paths tested so far.
+ * @param numRecursiveCalls The number of recursive calls made.
+ * @param numBackTracks The number of backtracks done.
+ */
 template <class T>
 void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shortestPath, double &shortestDist, Vertex<T> *checkVertex, int &numPathsTested, int &numRecursiveCalls , int &numBackTracks) {
     //cout << "teste" << endl;
@@ -785,6 +808,16 @@ void BTUtil(Graph<T> *g, vector<string> &path, double dist, vector<string> &shor
     }
 }
 
+
+/**
+ * @brief Solves the TSP using the Backtracking algorithm.
+ *
+ * This function initializes necessary variables, calls the BTUtil function to explore all paths, and outputs the results.
+ *
+ * @tparam T The type of the vertex information.
+ * @param g Pointer to the graph.
+ * @param edges Pointer to the map of edges (optional, not used directly).
+ */
 template<class T>
 void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     vector<string> path;
@@ -841,8 +874,15 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 }
 
 
-
-
+/**
+ * @brief Solves the TSP using the Triangle Approximation algorithm.
+ *
+ * This function uses a minimum spanning tree-based approach to approximate the TSP solution.
+ *
+ * @tparam T The type of the vertex information.
+ * @param g Pointer to the graph.
+ * @param edges Pointer to the map of edges (optional, not used directly).
+*/
 template<class T>
 void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 
@@ -992,6 +1032,16 @@ double calculateDistance(Vertex<T>* v1, Vertex<T>* v2) {
 }
 */
 
+/**
+ * @brief Gets the weight of the edge between two vertices.
+ *
+ * This function iterates through the adjacency list of the first vertex to find the edge leading to the second vertex.
+ *
+ * @tparam T The type of the vertex information.
+ * @param v1 Pointer to the first vertex.
+ * @param v2 Pointer to the second vertex.
+ * @return The weight of the edge if found, otherwise returns infinity.
+ */
 template<class T>
 double getEdgeWeight(Vertex<T>* v1, Vertex<T>* v2) {
     for (auto & e : v1->getAdj()) {
@@ -1002,6 +1052,16 @@ double getEdgeWeight(Vertex<T>* v1, Vertex<T>* v2) {
     return numeric_limits<double>::infinity();
 }
 
+
+/**
+ * @brief Solves the TSP using the Nearest Neighbor heuristic.
+ *
+ * This function finds a TSP tour using the Nearest Neighbor heuristic and calculates the total distance of the tour.
+ *
+ * @tparam T The type of the vertex information.
+ * @param g Pointer to the graph.
+ * @param edges Pointer to the map of edges (optional, not used directly).
+ */
 template<class T>
 void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     auto start = chrono::high_resolution_clock::now();
