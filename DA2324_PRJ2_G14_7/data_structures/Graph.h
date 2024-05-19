@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iomanip>
 #include <chrono>
+#include <cmath>
 #include "data_structures/MutablePriorityQueue.h"
 #include "../Class/Edges.h"
 
@@ -454,7 +455,7 @@ bool Graph<T>::removeVertex(const T &in) {
             vertexSet.erase(v->getInfo());
             delete v;
             return true;
-         }
+        }
     }
 
     return false;
@@ -846,6 +847,25 @@ vector<Vertex<T>*> Graph<T>::nearestNeighborTSP() {
     return tour;
 }
 
+/*
+ * template<class T>
+double calculateDistance(Vertex<T>* v1, Vertex<T>* v2) {
+    // Example using Euclidean distance
+    double dx = v1->x - v2->x;
+    double dy = v1->y - v2->y;
+    return sqrt(dx * dx + dy * dy);
+}
+*/
+
+template<class T>
+double getEdgeWeight(Vertex<T>* v1, Vertex<T>* v2) {
+    for (auto & e : v1->getAdj()) {
+        if (e->getDest() == v2) {
+            return e->getWeight();
+        }
+    }
+    return numeric_limits<double>::infinity(); // Or some appropriate error value
+}
 
 template<class T>
 void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
@@ -858,6 +878,11 @@ void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     auto durationMilliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
     auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
 
+    double totalDistance = 0.0;
+    for (size_t i = 0; i < tspTour.size() - 1; ++i) {
+        totalDistance+= getEdgeWeight(tspTour[i], tspTour[i + 1]);
+    }
+    totalDistance += getEdgeWeight(tspTour.back(), tspTour.front());
 
     cout << "Shortest Path Found: ";
     for (unsigned int i = 0; i < tspTour.size(); ++i) {
@@ -866,7 +891,12 @@ void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
             cout << " -> ";
         }
     }
+
+    cout << " -> " << tspTour.front()->getInfo();
+
     cout << endl;
+
+    cout << "Total distance:" << totalDistance << endl;
 
     if(duration != 0)
         cout << "Execution time: " << duration << " seconds" << endl;
