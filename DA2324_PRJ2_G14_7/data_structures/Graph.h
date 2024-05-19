@@ -43,6 +43,9 @@ public:
     double getDist() const;
     Edge<T> *getPath() const;
     std::vector<Edge<T> *> getIncoming() const;
+    void addChild(string s);
+    void eraseChild();
+    std::vector<string> getChild();
 
     void setInfo(T info);
     void setVisited(bool visited);
@@ -62,6 +65,7 @@ public:
 protected:
     T info;                // info node
     std::vector<Edge<T> *> adj;  // outgoing edges
+    std::vector<string> child;
 
     double flow = 0; // for flow-related problems
 
@@ -290,6 +294,21 @@ void Vertex<T>::setProcesssing(bool processing) {
 template <class T>
 void Vertex<T>::setIndegree(unsigned int indegree) {
     this->indegree = indegree;
+}
+
+template <class T>
+void Vertex<T>::addChild(std::string s) {
+    this->child.push_back(s);
+}
+
+template <class T>
+void Vertex<T>::eraseChild() {
+    child.clear();
+}
+
+template <class T>
+std::vector<string> Vertex<T>::getChild(){
+    return this->child;
 }
 
 template <class T>
@@ -790,9 +809,81 @@ void Backtracking(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 }
 
 
+
+
 template<class T>
 void TriangleApproximation(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
 
+    std::unordered_map<string , Vertex<T> *> vertix = g->getVertexSet();
+    for(auto e: vertix){
+        e.second->setVisited(false);
+        e.second->setDist(INF);
+        e.second->eraseChild();
+    }
+
+    Vertex<T> *r = g->findVertex("0");
+    r->setDist(0);
+    MutablePriorityQueue<Vertex<T>> pq;
+    pq.insert(r);
+    while(!pq.empty()){
+        auto i = pq.extractMin();
+        i->setVisited(true);
+        if(i->getInfo()!= "0"){
+            i->getPath()->getOrig()->addChild(i->getInfo());
+        }
+        for(auto & q: i->getAdj()){
+            Vertex<T> *w = q->getDest();
+            if (!w->isVisited()){
+                auto dist2 = w->getDist();
+                if(q->getWeight() < dist2){
+                    w->setDist(q->getWeight());
+                    w->setPath(q);
+                    if(dist2 == INF){
+                        pq.insert(w);
+                    }else{
+                        pq.decreaseKey(w);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<std::string> result;
+
+    std::stack<Vertex<T> *> stack;
+    stack.push(r);
+
+    while (!stack.empty()) {
+        Vertex<T> *v = stack.top();
+        stack.pop();
+
+        for (const auto &child : v->getChild()) {
+            stack.push(g->findVertex(child));
+        }
+
+        result.push_back(v->getInfo());
+    }
+
+    result.push_back("0");
+    double totalDistance = 0;
+    for (int l = 0; l < result.size() - 1; ++l) {
+        auto j = g->findVertex(result[l]);
+        for (auto & k: j->getAdj()){
+            if(k->getDest()->getInfo()==result[l+1]){
+                totalDistance += k->getWeight();
+            }
+        }
+    }
+
+
+    std::cout << "Approximate Path Found: ";
+    for (size_t i = 0; i < result.size(); ++i) {
+        std::cout << result[i];
+        if (i != result.size() - 1) {
+            std::cout << " -> ";
+        }
+    }
+    std::cout << std::endl;
+    std::cout << "Total Distance Traveled in path: " << totalDistance << std::endl;
 }
 
 template <class T>
