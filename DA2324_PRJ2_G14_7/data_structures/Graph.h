@@ -1037,4 +1037,73 @@ void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
         cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
 }
 
+/*
+static inline double convertToRadians(double degree) {
+    return degree * M_PI / 180.0;
+}
+
+// Function to calculate Haversine distance between two coordinates in meters
+static inline double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+    double rad_lat1 = convertToRadians(lat1);
+    double rad_lon1 = convertToRadians(lon1);
+    double rad_lat2 = convertToRadians(lat2);
+    double rad_lon2 = convertToRadians(lon2);
+
+    double delta_lat = rad_lat2 - rad_lat1;
+    double delta_lon = rad_lon2 - rad_lon1;
+
+    double a = sin(delta_lat / 2.0) * sin(delta_lat / 2.0) +
+               cos(rad_lat1) * cos(rad_lat2) *
+               sin(delta_lon / 2.0) * sin(delta_lon / 2.0);
+
+    double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
+
+    double earth_radius = 6371000.0; // Earth radius in meters
+    return earth_radius * c;
+}
+
+
+template<class T>
+void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
+    auto start = chrono::high_resolution_clock::now();
+
+    vector<Vertex<T>*> tspTour = g->nearestNeighborTSP();
+
+    auto end = chrono::high_resolution_clock::now();
+    auto durationMicroseconds = chrono::duration_cast<chrono::microseconds>(end - start).count();
+    auto durationMilliseconds = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
+
+    double totalDistance = 0.0;
+    for (size_t i = 0; i < tspTour.size() - 1; i++) {
+        // Extract coordinates of two vertices
+        double lat1 = tspTour[i]->getLatitude();
+        double lon1 = tspTour[i]->getLongitude();
+        double lat2 = tspTour[i + 1]->getLatitude();
+        double lon2 = tspTour[i + 1]->getLongitude();
+
+        // Calculate distance between them using Haversine formula
+        totalDistance += haversineDistance(lat1, lon1, lat2, lon2);
+    }
+
+    cout << "Shortest Path Found: ";
+    for (unsigned int i = 0; i < tspTour.size(); ++i) {
+        cout << tspTour.at(i)->getInfo();
+        if (i != tspTour.size()-1) {
+            cout << " -> ";
+        }
+    }
+    cout << endl;
+
+    cout << "Total distance:" << totalDistance << " meters" << endl;
+
+    if(duration != 0)
+        cout << "Execution time: " << duration << " seconds" << endl;
+    else if(durationMilliseconds != 0)
+        cout << "Execution time: " << durationMilliseconds << " milliseconds" << endl;
+    else
+        cout << "Execution time: " << durationMicroseconds << " microseconds" << endl;
+}
+*/
+
 #endif // FEUP_DA_2024_PRJ2_G07_T14_GRAPH_H
