@@ -879,10 +879,9 @@ void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
     auto duration = chrono::duration_cast<chrono::seconds >(end - start).count();
 
     double totalDistance = 0.0;
-    for (size_t i = 0; i < tspTour.size() - 1; ++i) {
+    for (size_t i = 0; i < tspTour.size() - 1; i++) {
         totalDistance+= getEdgeWeight(tspTour[i], tspTour[i + 1]);
     }
-    totalDistance += getEdgeWeight(tspTour.back(), tspTour.front());
 
     cout << "Shortest Path Found: ";
     for (unsigned int i = 0; i < tspTour.size(); ++i) {
@@ -891,9 +890,6 @@ void NearestNeighbor(Graph<T> *g, const unordered_map<string, Edges *> *edges) {
             cout << " -> ";
         }
     }
-
-    cout << " -> " << tspTour.front()->getInfo();
-
     cout << endl;
 
     cout << "Total distance:" << totalDistance << endl;
